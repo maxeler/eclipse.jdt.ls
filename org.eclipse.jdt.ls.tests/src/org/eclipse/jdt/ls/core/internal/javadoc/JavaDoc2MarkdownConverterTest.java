@@ -12,9 +12,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.ls.core.internal.javadoc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -23,7 +24,7 @@ import java.util.regex.Pattern;
 
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.Util;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests Javadoc to Markdown conversion
@@ -169,6 +170,22 @@ public class JavaDoc2MarkdownConverterTest extends AbstractJavadocConverterTest 
 		String[] labelAndURIFromMarkdown = extractLabelAndURIFromLinkMarkdown(convertedMarkdown);
 		assertEquals("JDT", labelAndURIFromMarkdown[0]);
 		assertEquals("jdt://some_location", labelAndURIFromMarkdown[1]);
+	}
+
+	/**
+	 * Ensures the custom anchor renderer encodes parentheses in jdt:// hrefs so
+	 * Markdown link syntax [text](url) is not broken. See #3705.
+	 */
+	@Test
+	public void testJdtLinkWithParenthesesInUrlIsEncodedByAnchorRenderer() throws IOException {
+		String htmlWithUnencodedParens = "<a href=\"jdt://contents/foo.jar/pkg/Clazz.class?=x/%3Cpkg(Clazz.class#42\">waitForExit</a>";
+		JavaDoc2MarkdownConverter converter = new JavaDoc2MarkdownConverter(htmlWithUnencodedParens);
+		String convertedMarkdown = converter.getAsString();
+
+		String[] labelAndURIFromMarkdown = extractLabelAndURIFromLinkMarkdown(convertedMarkdown);
+		assertEquals("waitForExit", labelAndURIFromMarkdown[0]);
+		assertTrue(labelAndURIFromMarkdown[1].contains("%28Clazz.class#42"), "jdt URL should contain encoded opening parenthesis: " + labelAndURIFromMarkdown[1]);
+		assertFalse(labelAndURIFromMarkdown[1].contains("(Clazz.class"), "jdt URL should not contain raw ( before .class: " + labelAndURIFromMarkdown[1]);
 	}
 
 	@Test

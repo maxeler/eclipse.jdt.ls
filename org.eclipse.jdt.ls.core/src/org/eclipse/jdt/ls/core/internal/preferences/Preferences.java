@@ -12,6 +12,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.ls.core.internal.preferences;
 
+import static org.eclipse.jdt.ls.core.internal.handlers.MapFlattener.containsKey;
 import static org.eclipse.jdt.ls.core.internal.handlers.MapFlattener.getBoolean;
 import static org.eclipse.jdt.ls.core.internal.handlers.MapFlattener.getInt;
 import static org.eclipse.jdt.ls.core.internal.handlers.MapFlattener.getList;
@@ -111,6 +112,11 @@ public class Preferences {
 	 * Include method declarations from source files in symbol search.
 	 */
 	public static final String JAVA_SYMBOLS_INCLUDE_SOURCE_METHOD_DECLARATIONS = "java.symbols.includeSourceMethodDeclarations";
+
+	/**
+	 * Include generated code (e.g. Lombok getters, setters, constructors) in document symbols.
+	 */
+	public static final String JAVA_SYMBOLS_INCLUDE_GENERATED_CODE = "java.symbols.includeGeneratedCode";
 
 	/**
 	 * Insert spaces when pressing Tab
@@ -248,6 +254,11 @@ public class Preferences {
 	 * Preference key to enable/disable organize imports on save
 	 */
 	public static final String JAVA_SAVE_ACTIONS_ORGANIZE_IMPORTS_KEY = "java.saveActions.organizeImports";
+
+	/**
+	 * Preference key to enable/disable organize imports on paste
+	 */
+	public static final String JAVA_UPDATE_IMPORTS_ON_PASTE_ENABLED_KEY = "java.updateImportsOnPaste.enabled";
 
 	/**
 	 * Preference key to enable/disable signature help.
@@ -513,6 +524,8 @@ public class Preferences {
 
 	public static final String JAVA_INLAYHINTS_PARAMETERTYPES_ENABLED = "java.inlayHints.parameterTypes.enabled";
 
+	public static final String JAVA_INLAYHINTS_FORMATPARAMETERS_ENABLED = "java.inlayHints.formatParameters.enabled";
+
 	/**
 	 * Preference key for the inlay hints exclusion list
 	 */
@@ -522,6 +535,9 @@ public class Preferences {
 
 	public static final String JAVA_JDT_LS_PROTOBUF_SUPPORT_ENABLED = "java.jdt.ls.protobufSupport.enabled";
 	public static final String JAVA_JDT_LS_ANDROID_SUPPORT_ENABLED = "java.jdt.ls.androidSupport.enabled";
+	public static final String JAVA_JDT_LS_ASPECTJ_SUPPORT_ENABLED = "java.jdt.ls.aspectjSupport.enabled";
+	public static final String JAVA_JDT_LS_KOTLIN_SUPPORT_ENABLED = "java.jdt.ls.kotlinSupport.enabled";
+	public static final String JAVA_JDT_LS_GROOVY_SUPPORT_ENABLED = "java.jdt.ls.groovySupport.enabled";
 	public static final String JAVA_JDT_LS_JAVAC_ENABLED = "java.jdt.ls.javac.enabled";
 
 	public static final String JAVA_COMPILE_NULLANALYSIS_NONNULL = "java.compile.nullAnalysis.nonnull";
@@ -573,7 +589,6 @@ public class Preferences {
 	public static final String REFERENCES = "textDocument/references";
 	public static final String DOCUMENT_HIGHLIGHT = "textDocument/documentHighlight";
 	public static final String FOLDINGRANGE = "textDocument/foldingRange";
-	public static final String WORKSPACE_CHANGE_FOLDERS = "workspace/didChangeWorkspaceFolders";
 	public static final String IMPLEMENTATION = "textDocument/implementation";
 	public static final String SELECTION_RANGE = "textDocument/selectionRange";
 	public static final String INLAY_HINT = "textDocument/inlayHint";
@@ -596,7 +611,6 @@ public class Preferences {
 	public static final String REFERENCES_ID = UUID.randomUUID().toString();
 	public static final String DOCUMENT_HIGHLIGHT_ID = UUID.randomUUID().toString();
 	public static final String FOLDINGRANGE_ID = UUID.randomUUID().toString();
-	public static final String WORKSPACE_CHANGE_FOLDERS_ID = UUID.randomUUID().toString();
 	public static final String WORKSPACE_WATCHED_FILES_ID = UUID.randomUUID().toString();
 	public static final String IMPLEMENTATION_ID = UUID.randomUUID().toString();
 	public static final String SELECTION_RANGE_ID = UUID.randomUUID().toString();
@@ -637,6 +651,7 @@ public class Preferences {
 	private String javaQuickFixShowAt;
 	private boolean javaFormatOnTypeEnabled;
 	private boolean javaSaveActionsOrganizeImportsEnabled;
+	private boolean javaUpdateImportsOnPasteEnabled;
 	private boolean signatureHelpEnabled;
 	private boolean signatureHelpDescriptionEnabled;
 	private boolean hoverJavadocEnabled;
@@ -670,6 +685,7 @@ public class Preferences {
 	private boolean smartSemicolonDetection;
 	private boolean includeDecompiledSources;
 	private boolean includeSourceMethodDeclarations;
+	private boolean showGeneratedCodeSymbols;
 
 	private String mavenUserSettings;
 	private String mavenGlobalSettings;
@@ -708,9 +724,13 @@ public class Preferences {
 	private List<String> inlayHintsExclusionList;
 	private boolean inlayHintsVariableTypesEnabled;
 	private boolean inlayHintsParameterTypesEnabled;
+	private boolean inlayHintsFormatParametersEnabled;
 	private ProjectEncodingMode projectEncoding;
 	private boolean avoidVolatileChanges;
 	private boolean protobufSupportEnabled;
+	private boolean aspectjSupportEnabled;
+	private boolean kotlinSupportEnabled;
+	private boolean groovySupportEnabled;
 	private boolean javacEnabled;
 	private boolean androidSupportEnabled;
 	private List<String> nonnullTypes;
@@ -921,6 +941,7 @@ public class Preferences {
 		javaQuickFixShowAt = LINE;
 		javaFormatOnTypeEnabled = false;
 		javaSaveActionsOrganizeImportsEnabled = false;
+		javaUpdateImportsOnPasteEnabled = true;
 		signatureHelpEnabled = false;
 		signatureHelpDescriptionEnabled = false;
 		hoverJavadocEnabled = true;
@@ -965,6 +986,7 @@ public class Preferences {
 		smartSemicolonDetection = false;
 		includeDecompiledSources = true;
 		includeSourceMethodDeclarations = false;
+		showGeneratedCodeSymbols = false;
 		insertSpaces = true;
 		tabSize = DEFAULT_TAB_SIZE;
 		mavenNotCoveredPluginExecutionSeverity = IGNORE;
@@ -972,6 +994,7 @@ public class Preferences {
 		inlayHintsParameterMode = InlayHintsParameterMode.LITERALS;
 		inlayHintsVariableTypesEnabled = false;
 		inlayHintsParameterTypesEnabled = false;
+		inlayHintsFormatParametersEnabled = false;
 		projectEncoding = ProjectEncodingMode.IGNORE;
 		avoidVolatileChanges = true;
 		javacEnabled = false;
@@ -1087,6 +1110,7 @@ public class Preferences {
 		prefs.javaQuickFixShowAt = this.javaQuickFixShowAt;
 		prefs.javaFormatOnTypeEnabled = this.javaFormatOnTypeEnabled;
 		prefs.javaSaveActionsOrganizeImportsEnabled = this.javaSaveActionsOrganizeImportsEnabled;
+		prefs.javaUpdateImportsOnPasteEnabled = this.javaUpdateImportsOnPasteEnabled;
 		prefs.signatureHelpEnabled = this.signatureHelpEnabled;
 		prefs.signatureHelpDescriptionEnabled = this.signatureHelpDescriptionEnabled;
 		prefs.hoverJavadocEnabled = this.hoverJavadocEnabled;
@@ -1132,13 +1156,18 @@ public class Preferences {
 		prefs.smartSemicolonDetection = this.smartSemicolonDetection;
 		prefs.includeDecompiledSources = this.includeDecompiledSources;
 		prefs.includeSourceMethodDeclarations = this.includeSourceMethodDeclarations;
+		prefs.showGeneratedCodeSymbols = this.showGeneratedCodeSymbols;
 		prefs.inlayHintsParameterMode = this.inlayHintsParameterMode;
 		prefs.inlayHintsSuppressedWhenSameNameNumberedParameter = this.inlayHintsSuppressedWhenSameNameNumberedParameter;
 		prefs.inlayHintsVariableTypesEnabled = this.inlayHintsVariableTypesEnabled;
 		prefs.inlayHintsParameterTypesEnabled = this.inlayHintsParameterTypesEnabled;
+		prefs.inlayHintsFormatParametersEnabled = this.inlayHintsFormatParametersEnabled;
 		prefs.projectEncoding = this.projectEncoding;
 		prefs.avoidVolatileChanges = this.avoidVolatileChanges;
 		prefs.protobufSupportEnabled = this.protobufSupportEnabled;
+		prefs.aspectjSupportEnabled = this.aspectjSupportEnabled;
+		prefs.kotlinSupportEnabled = this.kotlinSupportEnabled;
+		prefs.groovySupportEnabled = this.groovySupportEnabled;
 		prefs.javacEnabled = this.javacEnabled;
 		prefs.androidSupportEnabled = this.androidSupportEnabled;
 		prefs.nullAnalysisMode = this.nullAnalysisMode;
@@ -1217,198 +1246,203 @@ public class Preferences {
 		}
 
 		// Now update only the fields that are present in the partial configuration
-		if (getValue(configuration, CONFIGURATION_UPDATE_BUILD_CONFIGURATION_KEY) != null) {
+		if (containsKey(configuration, CONFIGURATION_UPDATE_BUILD_CONFIGURATION_KEY)) {
 			String updateBuildConfiguration = getString(configuration, CONFIGURATION_UPDATE_BUILD_CONFIGURATION_KEY, null);
 			prefs.setUpdateBuildConfigurationStatus(
 					FeatureStatus.fromString(updateBuildConfiguration, existing.updateBuildConfigurationStatus));
 		}
 
-		if (getValue(configuration, IMPORT_GRADLE_ENABLED) != null) {
+		if (containsKey(configuration, IMPORT_GRADLE_ENABLED)) {
 			boolean importGradleEnabled = getBoolean(configuration, IMPORT_GRADLE_ENABLED, existing.importGradleEnabled);
 			prefs.setImportGradleEnabled(importGradleEnabled);
 		}
 
-		if (getValue(configuration, JAVA_CONFIGURATION_INSERTSPACES) != null) {
+		if (containsKey(configuration, JAVA_CONFIGURATION_INSERTSPACES)) {
 			boolean insertSpaces = getBoolean(configuration, JAVA_CONFIGURATION_INSERTSPACES, existing.insertSpaces);
 			prefs.setInsertSpaces(insertSpaces);
 		}
 
-		if (getValue(configuration, JAVA_CONFIGURATION_TABSIZE) != null) {
+		if (containsKey(configuration, JAVA_CONFIGURATION_TABSIZE)) {
 			int tabSize = getInt(configuration, JAVA_CONFIGURATION_TABSIZE, existing.tabSize);
 			prefs.setTabSize(tabSize);
 		}
 
-		if (getValue(configuration, IMPORT_GRADLE_OFFLINE_ENABLED) != null) {
+		if (containsKey(configuration, IMPORT_GRADLE_OFFLINE_ENABLED)) {
 			boolean importGradleOfflineEnabled = getBoolean(configuration, IMPORT_GRADLE_OFFLINE_ENABLED, existing.importGradleOfflineEnabled);
 			prefs.setImportGradleOfflineEnabled(importGradleOfflineEnabled);
 		}
 
-		if (getValue(configuration, GRADLE_WRAPPER_ENABLED) != null) {
+		if (containsKey(configuration, GRADLE_WRAPPER_ENABLED)) {
 			boolean gradleWrapperEnabled = getBoolean(configuration, GRADLE_WRAPPER_ENABLED, existing.gradleWrapperEnabled);
 			prefs.setGradleWrapperEnabled(gradleWrapperEnabled);
 		}
 
-		if (getValue(configuration, GRADLE_VERSION) != null) {
+		if (containsKey(configuration, GRADLE_VERSION)) {
 			String gradleVersion = getString(configuration, GRADLE_VERSION);
 			prefs.setGradleVersion(gradleVersion);
 		}
 
-		if (getValue(configuration, GRADLE_ARGUMENTS) != null) {
+		if (containsKey(configuration, GRADLE_ARGUMENTS)) {
 			List<String> gradleArguments = getList(configuration, GRADLE_ARGUMENTS);
 			prefs.setGradleArguments(gradleArguments);
 		}
 
-		if (getValue(configuration, GRADLE_JVM_ARGUMENTS) != null) {
+		if (containsKey(configuration, GRADLE_JVM_ARGUMENTS)) {
 			List<String> gradleJvmArguments = getList(configuration, GRADLE_JVM_ARGUMENTS);
 			prefs.setGradleJvmArguments(gradleJvmArguments);
 		}
 
-		if (getValue(configuration, GRADLE_HOME) != null) {
+		if (containsKey(configuration, GRADLE_HOME)) {
 			String gradleHome = getString(configuration, GRADLE_HOME);
 			prefs.setGradleHome(gradleHome);
 		}
 
-		if (getValue(configuration, GRADLE_JAVA_HOME) != null) {
+		if (containsKey(configuration, GRADLE_JAVA_HOME)) {
 			String gradleJavaHome = getString(configuration, GRADLE_JAVA_HOME);
 			prefs.setGradleJavaHome(gradleJavaHome);
 		}
 
-		if (getValue(configuration, GRADLE_USER_HOME) != null) {
+		if (containsKey(configuration, GRADLE_USER_HOME)) {
 			String gradleUserHome = getString(configuration, GRADLE_USER_HOME);
 			prefs.setGradleUserHome(gradleUserHome);
 		}
 
-		if (getValue(configuration, GRADLE_ANNOTATION_PROCESSING_ENABLED) != null) {
+		if (containsKey(configuration, GRADLE_ANNOTATION_PROCESSING_ENABLED)) {
 			boolean gradleAnnotationProcessingEnabled = getBoolean(configuration, GRADLE_ANNOTATION_PROCESSING_ENABLED, existing.gradleAnnotationProcessingEnabled);
 			prefs.setGradleAnnotationProcessingEnabled(gradleAnnotationProcessingEnabled);
 		}
 
-		if (getValue(configuration, IMPORT_MAVEN_ENABLED) != null) {
+		if (containsKey(configuration, IMPORT_MAVEN_ENABLED)) {
 			boolean importMavenEnabled = getBoolean(configuration, IMPORT_MAVEN_ENABLED, existing.importMavenEnabled);
 			prefs.setImportMavenEnabled(importMavenEnabled);
 		}
 
-		if (getValue(configuration, IMPORT_MAVEN_OFFLINE) != null) {
+		if (containsKey(configuration, IMPORT_MAVEN_OFFLINE)) {
 			boolean mavenOffline = getBoolean(configuration, IMPORT_MAVEN_OFFLINE, existing.mavenOffline);
 			prefs.setMavenOffline(mavenOffline);
 		}
 
-		if (getValue(configuration, MAVEN_DISABLE_TEST_CLASSPATH_FLAG) != null) {
+		if (containsKey(configuration, MAVEN_DISABLE_TEST_CLASSPATH_FLAG)) {
 			boolean mavenDisableTestClasspathFlag = getBoolean(configuration, MAVEN_DISABLE_TEST_CLASSPATH_FLAG, existing.mavenDisableTestClasspathFlag);
 			prefs.setMavenDisableTestClasspathFlag(mavenDisableTestClasspathFlag);
 		}
 
-		if (getValue(configuration, MAVEN_DOWNLOAD_SOURCES) != null) {
+		if (containsKey(configuration, MAVEN_DOWNLOAD_SOURCES)) {
 			boolean mavenDownloadSources = getBoolean(configuration, MAVEN_DOWNLOAD_SOURCES, existing.mavenDownloadSources);
 			prefs.setMavenDownloadSources(mavenDownloadSources);
 		}
 
-		if (getValue(configuration, ECLIPSE_DOWNLOAD_SOURCES) != null) {
+		if (containsKey(configuration, ECLIPSE_DOWNLOAD_SOURCES)) {
 			boolean eclipseDownloadSources = getBoolean(configuration, ECLIPSE_DOWNLOAD_SOURCES, existing.eclipseDownloadSources);
 			prefs.setEclipseDownloadSources(eclipseDownloadSources);
 		}
 
-		if (getValue(configuration, MAVEN_UPDATE_SNAPSHOTS) != null) {
+		if (containsKey(configuration, MAVEN_UPDATE_SNAPSHOTS)) {
 			boolean updateSnapshots = getBoolean(configuration, MAVEN_UPDATE_SNAPSHOTS, existing.mavenUpdateSnapshots);
 			prefs.setMavenUpdateSnapshots(updateSnapshots);
 		}
 
-		if (getValue(configuration, REFERENCES_CODE_LENS_ENABLED_KEY) != null) {
+		if (containsKey(configuration, REFERENCES_CODE_LENS_ENABLED_KEY)) {
 			boolean referenceCodelensEnabled = getBoolean(configuration, REFERENCES_CODE_LENS_ENABLED_KEY, existing.referencesCodeLensEnabled);
 			prefs.setReferencesCodelensEnabled(referenceCodelensEnabled);
 		}
 
-		if (getValue(configuration, IMPLEMENTATIONS_CODE_LENS_KEY) != null) {
+		if (containsKey(configuration, IMPLEMENTATIONS_CODE_LENS_KEY)) {
 			String implementationCodeLens = getString(configuration, IMPLEMENTATIONS_CODE_LENS_KEY, existing.implementationsCodeLens);
 			prefs.setImplementationCodelens(implementationCodeLens);
 		}
 
-		if (getValue(configuration, JAVA_FORMAT_ENABLED_KEY) != null) {
+		if (containsKey(configuration, JAVA_FORMAT_ENABLED_KEY)) {
 			boolean javaFormatEnabled = getBoolean(configuration, JAVA_FORMAT_ENABLED_KEY, existing.javaFormatEnabled);
 			prefs.setJavaFormatEnabled(javaFormatEnabled);
 		}
 
-		if (getValue(configuration, QUICK_FIX_SHOW_AT) != null) {
+		if (containsKey(configuration, QUICK_FIX_SHOW_AT)) {
 			String javaQuickFixShowAt = getString(configuration, QUICK_FIX_SHOW_AT, existing.javaQuickFixShowAt);
 			prefs.setJavaQuickFixShowAt(javaQuickFixShowAt);
 		}
 
-		if (getValue(configuration, JAVA_FORMAT_ON_TYPE_ENABLED_KEY) != null) {
+		if (containsKey(configuration, JAVA_FORMAT_ON_TYPE_ENABLED_KEY)) {
 			boolean javaFormatOnTypeEnabled = getBoolean(configuration, JAVA_FORMAT_ON_TYPE_ENABLED_KEY, existing.javaFormatOnTypeEnabled);
 			prefs.setJavaFormatOnTypeEnabled(javaFormatOnTypeEnabled);
 		}
 
-		if (getValue(configuration, JAVA_SAVE_ACTIONS_ORGANIZE_IMPORTS_KEY) != null) {
+		if (containsKey(configuration, JAVA_SAVE_ACTIONS_ORGANIZE_IMPORTS_KEY)) {
 			boolean javaSaveActionAutoOrganizeImportsEnabled = getBoolean(configuration, JAVA_SAVE_ACTIONS_ORGANIZE_IMPORTS_KEY, existing.javaSaveActionsOrganizeImportsEnabled);
 			prefs.setJavaSaveActionAutoOrganizeImportsEnabled(javaSaveActionAutoOrganizeImportsEnabled);
 		}
 
-		if (getValue(configuration, SIGNATURE_HELP_ENABLED_KEY) != null) {
+		if (containsKey(configuration, JAVA_UPDATE_IMPORTS_ON_PASTE_ENABLED_KEY)) {
+			boolean javaUpdateImportsOnPasteEnabled = getBoolean(configuration, JAVA_UPDATE_IMPORTS_ON_PASTE_ENABLED_KEY, existing.javaUpdateImportsOnPasteEnabled);
+			prefs.setJavaUpdateImportsOnPasteEnabled(javaUpdateImportsOnPasteEnabled);
+		}
+
+		if (containsKey(configuration, SIGNATURE_HELP_ENABLED_KEY)) {
 			boolean signatureHelpEnabled = getBoolean(configuration, SIGNATURE_HELP_ENABLED_KEY, existing.signatureHelpEnabled);
 			prefs.setSignatureHelpEnabled(signatureHelpEnabled);
 		}
 
-		if (getValue(configuration, SIGNATURE_HELP_DESCRIPTION_ENABLED_KEY) != null) {
+		if (containsKey(configuration, SIGNATURE_HELP_DESCRIPTION_ENABLED_KEY)) {
 			boolean signatureDescriptionEnabled = getBoolean(configuration, SIGNATURE_HELP_DESCRIPTION_ENABLED_KEY, existing.signatureHelpDescriptionEnabled);
 			prefs.setSignatureHelpDescriptionEnabled(signatureDescriptionEnabled);
 		}
 
-		if (getValue(configuration, JAVA_HOVER_JAVADOC_ENABLED_KEY) != null) {
+		if (containsKey(configuration, JAVA_HOVER_JAVADOC_ENABLED_KEY)) {
 			boolean hoverJavadocEnabled = getBoolean(configuration, JAVA_HOVER_JAVADOC_ENABLED_KEY, existing.hoverJavadocEnabled);
 			prefs.setHoverJavadocEnabled(hoverJavadocEnabled);
 		}
 
-		if (getValue(configuration, RENAME_ENABLED_KEY) != null) {
+		if (containsKey(configuration, RENAME_ENABLED_KEY)) {
 			boolean renameEnabled = getBoolean(configuration, RENAME_ENABLED_KEY, existing.renameEnabled);
 			prefs.setRenameEnabled(renameEnabled);
 		}
 
-		if (getValue(configuration, EXECUTE_COMMAND_ENABLED_KEY) != null) {
+		if (containsKey(configuration, EXECUTE_COMMAND_ENABLED_KEY)) {
 			boolean executeCommandEnable = getBoolean(configuration, EXECUTE_COMMAND_ENABLED_KEY, existing.executeCommandEnabled);
 			prefs.setExecuteCommandEnabled(executeCommandEnable);
 		}
 
-		if (getValue(configuration, AUTOBUILD_ENABLED_KEY) != null) {
+		if (containsKey(configuration, AUTOBUILD_ENABLED_KEY)) {
 			boolean autobuildEnable = getBoolean(configuration, AUTOBUILD_ENABLED_KEY, existing.autobuildEnabled);
 			prefs.setAutobuildEnabled(autobuildEnable);
 		}
 
-		if (getValue(configuration, COMPLETION_ENABLED_KEY) != null) {
+		if (containsKey(configuration, COMPLETION_ENABLED_KEY)) {
 			boolean completionEnable = getBoolean(configuration, COMPLETION_ENABLED_KEY, existing.completionEnabled);
 			prefs.setCompletionEnabled(completionEnable);
 		}
 
-		if (getValue(configuration, POSTFIX_COMPLETION_KEY) != null) {
+		if (containsKey(configuration, POSTFIX_COMPLETION_KEY)) {
 			boolean postfixEnabled = getBoolean(configuration, POSTFIX_COMPLETION_KEY, existing.postfixCompletionEnabled);
 			prefs.setPostfixCompletionEnabled(postfixEnabled);
 		}
 
-		if (getValue(configuration, COMPLETION_MATCH_CASE_MODE_KEY) != null) {
+		if (containsKey(configuration, COMPLETION_MATCH_CASE_MODE_KEY)) {
 			String completionMatchCaseMode = getString(configuration, COMPLETION_MATCH_CASE_MODE_KEY, null);
 			prefs.setCompletionMatchCaseMode(CompletionMatchCaseMode.fromString(completionMatchCaseMode, existing.completionMatchCaseMode));
 		}
 
-		if (getValue(configuration, COMPLETION_LAZY_RESOLVE_TEXT_EDIT_ENABLED_KEY) != null) {
+		if (containsKey(configuration, COMPLETION_LAZY_RESOLVE_TEXT_EDIT_ENABLED_KEY)) {
 			boolean completionLazyResolveTextEditEnabled = getBoolean(configuration, COMPLETION_LAZY_RESOLVE_TEXT_EDIT_ENABLED_KEY, existing.completionLazyResolveTextEditEnabled);
 			prefs.setCompletionLazyResolveTextEditEnabled(completionLazyResolveTextEditEnabled);
 		}
 
-		if (getValue(configuration, JAVA_COMPLETION_OVERWRITE_KEY) != null) {
+		if (containsKey(configuration, JAVA_COMPLETION_OVERWRITE_KEY)) {
 			boolean completionOverwrite = getBoolean(configuration, JAVA_COMPLETION_OVERWRITE_KEY, existing.completionOverwrite);
 			prefs.setCompletionOverwrite(completionOverwrite);
 		}
 
-		if (getValue(configuration, FOLDINGRANGE_ENABLED_KEY) != null) {
+		if (containsKey(configuration, FOLDINGRANGE_ENABLED_KEY)) {
 			boolean foldingRangeEnable = getBoolean(configuration, FOLDINGRANGE_ENABLED_KEY, existing.foldingRangeEnabled);
 			prefs.setFoldingRangeEnabled(foldingRangeEnable);
 		}
 
-		if (getValue(configuration, SELECTIONRANGE_ENABLED_KEY) != null) {
+		if (containsKey(configuration, SELECTIONRANGE_ENABLED_KEY)) {
 			boolean selectionRangeEnabled = getBoolean(configuration, SELECTIONRANGE_ENABLED_KEY, existing.selectionRangeEnabled);
 			prefs.setSelectionRangeEnabled(selectionRangeEnabled);
 		}
 
-		if (getValue(configuration, JAVA_COMPLETION_GUESS_METHOD_ARGUMENTS_KEY) != null) {
+		if (containsKey(configuration, JAVA_COMPLETION_GUESS_METHOD_ARGUMENTS_KEY)) {
 			Object guessMethodArguments = getValue(configuration, JAVA_COMPLETION_GUESS_METHOD_ARGUMENTS_KEY);
 			if (guessMethodArguments instanceof Boolean b) {
 				prefs.setGuessMethodArgumentsMode(b ? CompletionGuessMethodArgumentsMode.INSERT_BEST_GUESSED_ARGUMENTS :
@@ -1420,67 +1454,67 @@ public class Preferences {
 			}
 		}
 
-		if (getValue(configuration, JAVA_COMPLETION_COLLAPSE_KEY) != null) {
+		if (containsKey(configuration, JAVA_COMPLETION_COLLAPSE_KEY)) {
 			boolean collapseCompletionItemsEnabled = getBoolean(configuration, JAVA_COMPLETION_COLLAPSE_KEY, existing.collapseCompletionItems);
 			prefs.setCollapseCompletionItemsEnabled(collapseCompletionItemsEnabled);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_HASHCODEEQUALS_USEJAVA7OBJECTS) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_HASHCODEEQUALS_USEJAVA7OBJECTS)) {
 			boolean hashCodeEqualsTemplateUseJava7Objects = getBoolean(configuration, JAVA_CODEGENERATION_HASHCODEEQUALS_USEJAVA7OBJECTS, existing.hashCodeEqualsTemplateUseJava7Objects);
 			prefs.setHashCodeEqualsTemplateUseJava7Objects(hashCodeEqualsTemplateUseJava7Objects);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_HASHCODEEQUALS_USEINSTANCEOF) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_HASHCODEEQUALS_USEINSTANCEOF)) {
 			boolean hashCodeEqualsTemplateUseInstanceof = getBoolean(configuration, JAVA_CODEGENERATION_HASHCODEEQUALS_USEINSTANCEOF, existing.hashCodeEqualsTemplateUseInstanceof);
 			prefs.setHashCodeEqualsTemplateUseInstanceof(hashCodeEqualsTemplateUseInstanceof);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_USEBLOCKS) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_USEBLOCKS)) {
 			boolean codeGenerationTemplateUseBlocks = getBoolean(configuration, JAVA_CODEGENERATION_USEBLOCKS, existing.codeGenerationTemplateUseBlocks);
 			prefs.setCodeGenerationTemplateUseBlocks(codeGenerationTemplateUseBlocks);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_GENERATECOMMENTS) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_GENERATECOMMENTS)) {
 			boolean codeGenerationTemplateGenerateComments = getBoolean(configuration, JAVA_CODEGENERATION_GENERATECOMMENTS, existing.codeGenerationTemplateGenerateComments);
 			prefs.setCodeGenerationTemplateGenerateComments(codeGenerationTemplateGenerateComments);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_TOSTRING_TEMPLATE) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_TOSTRING_TEMPLATE)) {
 			String generateToStringTemplate = getString(configuration, JAVA_CODEGENERATION_TOSTRING_TEMPLATE);
 			prefs.setGenerateToStringTemplate(generateToStringTemplate);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_TOSTRING_CODESTYLE) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_TOSTRING_CODESTYLE)) {
 			String generateToStringCodeStyle = getString(configuration, JAVA_CODEGENERATION_TOSTRING_CODESTYLE, existing.generateToStringCodeStyle);
 			prefs.setGenerateToStringCodeStyle(generateToStringCodeStyle);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_TOSTRING_SKIPNULLVALUES) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_TOSTRING_SKIPNULLVALUES)) {
 			boolean generateToStringSkipNullValues = getBoolean(configuration, JAVA_CODEGENERATION_TOSTRING_SKIPNULLVALUES, existing.generateToStringSkipNullValues);
 			prefs.setGenerateToStringSkipNullValues(generateToStringSkipNullValues);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_TOSTRING_LISTARRAYCONTENTS) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_TOSTRING_LISTARRAYCONTENTS)) {
 			boolean generateToStringListArrayContents = getBoolean(configuration, JAVA_CODEGENERATION_TOSTRING_LISTARRAYCONTENTS, existing.generateToStringListArrayContents);
 			prefs.setGenerateToStringListArrayContents(generateToStringListArrayContents);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_TOSTRING_LIMITELEMENTS) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_TOSTRING_LIMITELEMENTS)) {
 			int generateToStringLimitElements = getInt(configuration, JAVA_CODEGENERATION_TOSTRING_LIMITELEMENTS, existing.generateToStringLimitElements);
 			prefs.setGenerateToStringLimitElements(generateToStringLimitElements);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_INSERTIONLOCATION) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_INSERTIONLOCATION)) {
 			String insertionLocation = getString(configuration, JAVA_CODEGENERATION_INSERTIONLOCATION);
 			prefs.setCodeGenerationInsertionLocation(insertionLocation);
 		}
 
-		if (getValue(configuration, JAVA_CODEGENERATION_ADD_FINAL_FOR_NEW_DECLARATION) != null) {
+		if (containsKey(configuration, JAVA_CODEGENERATION_ADD_FINAL_FOR_NEW_DECLARATION)) {
 			String newFieldsFinal = getString(configuration, JAVA_CODEGENERATION_ADD_FINAL_FOR_NEW_DECLARATION);
 			prefs.setCodeGenerationAddFinalForNewDeclaration(newFieldsFinal);
 		}
 
-		if (getValue(configuration, JAVA_IMPORT_EXCLUSIONS_KEY) != null) {
+		if (containsKey(configuration, JAVA_IMPORT_EXCLUSIONS_KEY)) {
 			List<String> javaImportExclusions = getList(configuration, JAVA_IMPORT_EXCLUSIONS_KEY, existing.javaImportExclusions);
 			if (javaImportExclusions instanceof LinkedList) {
 				prefs.setJavaImportExclusions(javaImportExclusions);
@@ -1490,7 +1524,7 @@ public class Preferences {
 			}
 		}
 
-		if (getValue(configuration, JAVA_PROJECT_REFERENCED_LIBRARIES_KEY) != null) {
+		if (containsKey(configuration, JAVA_PROJECT_REFERENCED_LIBRARIES_KEY)) {
 			Object referencedLibraries = getValue(configuration, JAVA_PROJECT_REFERENCED_LIBRARIES_KEY);
 			if (referencedLibraries instanceof Map) {
 				try {
@@ -1512,123 +1546,123 @@ public class Preferences {
 			}
 		}
 
-		if (getValue(configuration, JAVA_PROJECT_OUTPUT_PATH_KEY) != null) {
+		if (containsKey(configuration, JAVA_PROJECT_OUTPUT_PATH_KEY)) {
 			String invisibleProjectOutputPath = getString(configuration, JAVA_PROJECT_OUTPUT_PATH_KEY, existing.invisibleProjectOutputPath);
 			prefs.setInvisibleProjectOutputPath(invisibleProjectOutputPath);
 		}
 
-		if (getValue(configuration, JAVA_PROJECT_SOURCE_PATHS_KEY) != null) {
+		if (containsKey(configuration, JAVA_PROJECT_SOURCE_PATHS_KEY)) {
 			List<String> invisibleProjectSourcePaths = getList(configuration, JAVA_PROJECT_SOURCE_PATHS_KEY, existing.invisibleProjectSourcePaths);
 			prefs.setInvisibleProjectSourcePaths(invisibleProjectSourcePaths);
 		}
 
-		if (getValue(configuration, JAVA_COMPLETION_FAVORITE_MEMBERS_KEY) != null) {
+		if (containsKey(configuration, JAVA_COMPLETION_FAVORITE_MEMBERS_KEY)) {
 			List<String> javaCompletionFavoriteMembers = getList(configuration, JAVA_COMPLETION_FAVORITE_MEMBERS_KEY, existing.javaCompletionFavoriteMembers);
 			prefs.setJavaCompletionFavoriteMembers(javaCompletionFavoriteMembers);
 		}
 
-		if (getValue(configuration, JAVA_GRADLE_WRAPPER_SHA256_KEY) != null) {
+		if (containsKey(configuration, JAVA_GRADLE_WRAPPER_SHA256_KEY)) {
 			List<?> gradleWrapperList = getList(configuration, JAVA_GRADLE_WRAPPER_SHA256_KEY, JAVA_GRADLE_WRAPPER_SHA256_DEFAULT);
 			prefs.setGradleWrapperList(gradleWrapperList);
 		}
 
-		if (getValue(configuration, MAVEN_USER_SETTINGS_KEY) != null) {
+		if (containsKey(configuration, MAVEN_USER_SETTINGS_KEY)) {
 			String mavenUserSettings = getString(configuration, MAVEN_USER_SETTINGS_KEY, existing.mavenUserSettings);
 			prefs.setMavenUserSettings(mavenUserSettings);
 		}
 
-		if (getValue(configuration, MAVEN_GLOBAL_SETTINGS_KEY) != null) {
+		if (containsKey(configuration, MAVEN_GLOBAL_SETTINGS_KEY)) {
 			String mavenGlobalSettings = getString(configuration, MAVEN_GLOBAL_SETTINGS_KEY, existing.mavenGlobalSettings);
 			prefs.setMavenGlobalSettings(mavenGlobalSettings);
 		}
 
-		if (getValue(configuration, MAVEN_LIFECYCLE_MAPPINGS_KEY) != null) {
+		if (containsKey(configuration, MAVEN_LIFECYCLE_MAPPINGS_KEY)) {
 			String mavenLifecycleMappings = getString(configuration, MAVEN_LIFECYCLE_MAPPINGS_KEY, existing.mavenLifecycleMappings);
 			prefs.setMavenLifecycleMappings(mavenLifecycleMappings);
 		}
 
-		if (getValue(configuration, MAVEN_NOT_COVERED_PLUGIN_EXECUTION_SEVERITY) != null) {
+		if (containsKey(configuration, MAVEN_NOT_COVERED_PLUGIN_EXECUTION_SEVERITY)) {
 			String mavenNotCoveredPluginExecution = getString(configuration, MAVEN_NOT_COVERED_PLUGIN_EXECUTION_SEVERITY, existing.mavenNotCoveredPluginExecutionSeverity);
 			prefs.setMavenNotCoveredPluginExecutionSeverity(mavenNotCoveredPluginExecution);
 		}
 
-		if (getValue(configuration, MAVEN_DEFAULT_MOJO_EXECUTION_ACTION) != null) {
+		if (containsKey(configuration, MAVEN_DEFAULT_MOJO_EXECUTION_ACTION)) {
 			String mavenDefaultMojoExecution = getString(configuration, MAVEN_DEFAULT_MOJO_EXECUTION_ACTION, existing.mavenDefaultMojoExecutionAction);
 			prefs.setMavenDefaultMojoExecutionAction(mavenDefaultMojoExecution);
 		}
 
-		if (getValue(configuration, MEMBER_SORT_ORDER) != null) {
+		if (containsKey(configuration, MEMBER_SORT_ORDER)) {
 			String sortOrder = getString(configuration, MEMBER_SORT_ORDER, null);
 			prefs.setMembersSortOrder(sortOrder);
 		}
 
-		if (getValue(configuration, PREFERRED_CONTENT_PROVIDER_KEY) != null) {
+		if (containsKey(configuration, PREFERRED_CONTENT_PROVIDER_KEY)) {
 			List<String> preferredContentProviders = getList(configuration, PREFERRED_CONTENT_PROVIDER_KEY);
 			prefs.setPreferredContentProviderIds(preferredContentProviders);
 		}
 
-		if (getValue(configuration, JAVA_HOME) != null) {
+		if (containsKey(configuration, JAVA_HOME)) {
 			String javaHome = getString(configuration, JAVA_HOME);
 			prefs.setJavaHome(javaHome);
 		}
 
-		if (getValue(configuration, JAVA_FORMATTER_URL) != null) {
+		if (containsKey(configuration, JAVA_FORMATTER_URL)) {
 			String formatterUrl = getString(configuration, JAVA_FORMATTER_URL);
 			prefs.setFormatterUrl(formatterUrl);
 		}
 
-		if (getValue(configuration, JAVA_SETTINGS_URL) != null) {
+		if (containsKey(configuration, JAVA_SETTINGS_URL)) {
 			String settingsUrl = getString(configuration, JAVA_SETTINGS_URL);
 			prefs.setSettingsUrl(settingsUrl);
 		}
 
-		if (getValue(configuration, JAVA_RESOURCE_FILTERS) != null) {
+		if (containsKey(configuration, JAVA_RESOURCE_FILTERS)) {
 			List<String> resourceFilters = getList(configuration, JAVA_RESOURCE_FILTERS, existing.resourceFilters);
 			prefs.setResourceFilters(resourceFilters);
 		}
 
-		if (getValue(configuration, JAVA_FORMATTER_PROFILE_NAME) != null) {
+		if (containsKey(configuration, JAVA_FORMATTER_PROFILE_NAME)) {
 			String formatterProfileName = getString(configuration, JAVA_FORMATTER_PROFILE_NAME);
 			prefs.setFormatterProfileName(formatterProfileName);
 		}
 
-		if (getValue(configuration, JAVA_FORMAT_COMMENTS) != null) {
+		if (containsKey(configuration, JAVA_FORMAT_COMMENTS)) {
 			boolean javaFormatComments = getBoolean(configuration, JAVA_FORMAT_COMMENTS, existing.javaFormatComments);
 			prefs.setJavaFormatComments(javaFormatComments);
 		}
 
-		if (getValue(configuration, JAVA_IMPORT_ORDER_KEY) != null) {
+		if (containsKey(configuration, JAVA_IMPORT_ORDER_KEY)) {
 			List<String> javaImportOrder = getList(configuration, JAVA_IMPORT_ORDER_KEY, existing.importOrder);
 			prefs.setImportOrder(javaImportOrder);
 		}
 
-		if (getValue(configuration, JAVA_COMPLETION_FILTERED_TYPES_KEY) != null) {
+		if (containsKey(configuration, JAVA_COMPLETION_FILTERED_TYPES_KEY)) {
 			List<String> javaFilteredTypes = getList(configuration, JAVA_COMPLETION_FILTERED_TYPES_KEY, existing.filteredTypes);
 			prefs.setFilteredTypes(javaFilteredTypes);
 		}
 
-		if (getValue(configuration, JAVA_MAX_CONCURRENT_BUILDS) != null) {
+		if (containsKey(configuration, JAVA_MAX_CONCURRENT_BUILDS)) {
 			int maxConcurrentBuilds = getInt(configuration, JAVA_MAX_CONCURRENT_BUILDS, existing.parallelBuildsCount);
 			maxConcurrentBuilds = maxConcurrentBuilds >= 1 ? maxConcurrentBuilds : 1;
 			prefs.setMaxBuildCount(maxConcurrentBuilds);
 		}
 
-		if (getValue(configuration, JAVA_COMPLETION_MAX_RESULTS_KEY) != null) {
+		if (containsKey(configuration, JAVA_COMPLETION_MAX_RESULTS_KEY)) {
 			int maxCompletions = getInt(configuration, JAVA_COMPLETION_MAX_RESULTS_KEY, existing.maxCompletionResults);
 			prefs.setMaxCompletionResults(maxCompletions);
 		}
 
-		if (getValue(configuration, IMPORTS_ONDEMANDTHRESHOLD) != null) {
+		if (containsKey(configuration, IMPORTS_ONDEMANDTHRESHOLD)) {
 			int onDemandThreshold = getInt(configuration, IMPORTS_ONDEMANDTHRESHOLD, existing.importOnDemandThreshold);
 			prefs.setImportOnDemandThreshold(onDemandThreshold);
 		}
 
-		if (getValue(configuration, IMPORTS_STATIC_ONDEMANDTHRESHOLD) != null) {
+		if (containsKey(configuration, IMPORTS_STATIC_ONDEMANDTHRESHOLD)) {
 			int staticOnDemandThreshold = getInt(configuration, IMPORTS_STATIC_ONDEMANDTHRESHOLD, existing.staticImportOnDemandThreshold);
 			prefs.setStaticImportOnDemandThreshold(staticOnDemandThreshold);
 		}
 
-		if (getValue(configuration, JAVA_CONFIGURATION_RUNTIMES) != null) {
+		if (containsKey(configuration, JAVA_CONFIGURATION_RUNTIMES)) {
 			List<?> runtimeList = getList(configuration, JAVA_CONFIGURATION_RUNTIMES, JAVA_CONFIGURATION_RUNTIMES_DEFAULT);
 			Set<RuntimeEnvironment> runtimes = new HashSet<>();
 			boolean[] hasDefault = { false };
@@ -1685,107 +1719,132 @@ public class Preferences {
 			prefs.setRuntimes(runtimes);
 		}
 
-		if (getValue(configuration, JAVA_TEMPLATES_FILEHEADER) != null) {
+		if (containsKey(configuration, JAVA_TEMPLATES_FILEHEADER)) {
 			List<String> fileHeader = getList(configuration, JAVA_TEMPLATES_FILEHEADER);
 			prefs.setFileHeaderTemplate(fileHeader);
 		}
 
-		if (getValue(configuration, JAVA_TEMPLATES_TYPECOMMENT) != null) {
+		if (containsKey(configuration, JAVA_TEMPLATES_TYPECOMMENT)) {
 			List<String> typeComment = getList(configuration, JAVA_TEMPLATES_TYPECOMMENT);
 			prefs.setTypeCommentTemplate(typeComment);
 		}
 
-		if (getValue(configuration, JAVA_REFERENCES_INCLUDE_ACCESSORS) != null) {
+		if (containsKey(configuration, JAVA_REFERENCES_INCLUDE_ACCESSORS)) {
 			boolean includeAccessors = getBoolean(configuration, JAVA_REFERENCES_INCLUDE_ACCESSORS, existing.includeAccessors);
 			prefs.setIncludeAccessors(includeAccessors);
 		}
 
-		if (getValue(configuration, JAVA_EDIT_SMARTSEMICOLON_DETECTION) != null) {
+		if (containsKey(configuration, JAVA_EDIT_SMARTSEMICOLON_DETECTION)) {
 			boolean smartSemicolonDetection = getBoolean(configuration, JAVA_EDIT_SMARTSEMICOLON_DETECTION, existing.smartSemicolonDetection);
 			prefs.setSmartSemicolonDetection(smartSemicolonDetection);
 		}
 
-		if (getValue(configuration, JAVA_REFERENCES_INCLUDE_DECOMPILED_SOURCES) != null) {
+		if (containsKey(configuration, JAVA_REFERENCES_INCLUDE_DECOMPILED_SOURCES)) {
 			boolean includeDecompiledSources = getBoolean(configuration, JAVA_REFERENCES_INCLUDE_DECOMPILED_SOURCES, existing.includeDecompiledSources);
 			prefs.setIncludeDecompiledSources(includeDecompiledSources);
 		}
 
-		if (getValue(configuration, JAVA_SYMBOLS_INCLUDE_SOURCE_METHOD_DECLARATIONS) != null) {
+		if (containsKey(configuration, JAVA_SYMBOLS_INCLUDE_SOURCE_METHOD_DECLARATIONS)) {
 			boolean includeSourceMethodDeclarations = getBoolean(configuration, JAVA_SYMBOLS_INCLUDE_SOURCE_METHOD_DECLARATIONS, existing.includeSourceMethodDeclarations);
 			prefs.setIncludeSourceMethodDeclarations(includeSourceMethodDeclarations);
 		}
 
-		if (getValue(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_ENABLED) != null) {
+		if (containsKey(configuration, JAVA_SYMBOLS_INCLUDE_GENERATED_CODE)) {
+			boolean showGeneratedCodeSymbols = getBoolean(configuration, JAVA_SYMBOLS_INCLUDE_GENERATED_CODE, existing.showGeneratedCodeSymbols);
+			prefs.setShowGeneratedCodeSymbols(showGeneratedCodeSymbols);
+		}
+
+		if (containsKey(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_ENABLED)) {
 			String inlayHintsParameterMode = getString(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_ENABLED, null);
 			prefs.setInlayHintsParameterMode(InlayHintsParameterMode.fromString(inlayHintsParameterMode, existing.inlayHintsParameterMode));
 		}
 
-		if (getValue(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_SUPPRESS_WHEN_SAME_NAME_NUMBERED) != null) {
+		if (containsKey(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_SUPPRESS_WHEN_SAME_NAME_NUMBERED)) {
 			boolean inlayHintsSuppressedWhenSameNameNumberedParameter = getBoolean(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_SUPPRESS_WHEN_SAME_NAME_NUMBERED, existing.inlayHintsSuppressedWhenSameNameNumberedParameter);
 			prefs.setInlayHintsSuppressedWhenSameNameNumberedParameter(inlayHintsSuppressedWhenSameNameNumberedParameter);
 		}
 
-		if (getValue(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_EXCLUSIONS) != null) {
+		if (containsKey(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_EXCLUSIONS)) {
 			List<String> inlayHintsExclusionList = getList(configuration, JAVA_INLAYHINTS_PARAMETERNAMES_EXCLUSIONS, existing.inlayHintsExclusionList);
 			prefs.setInlayHintsExclusionList(inlayHintsExclusionList);
 		}
 
-		if (getValue(configuration, JAVA_INLAYHINTS_VARIABLETYPES_ENABLED) != null) {
+		if (containsKey(configuration, JAVA_INLAYHINTS_VARIABLETYPES_ENABLED)) {
 			boolean inlayHintsVariableTypesEnabled = getBoolean(configuration, JAVA_INLAYHINTS_VARIABLETYPES_ENABLED, existing.inlayHintsVariableTypesEnabled);
 			prefs.setInlayHintsVariableTypesEnabled(inlayHintsVariableTypesEnabled);
 		}
 
-		if (getValue(configuration, JAVA_INLAYHINTS_PARAMETERTYPES_ENABLED) != null) {
+		if (containsKey(configuration, JAVA_INLAYHINTS_PARAMETERTYPES_ENABLED)) {
 			boolean inlayHintsParameterTypesEnabled = getBoolean(configuration, JAVA_INLAYHINTS_PARAMETERTYPES_ENABLED, existing.inlayHintsParameterTypesEnabled);
 			prefs.setInlayHintsParameterTypesEnabled(inlayHintsParameterTypesEnabled);
 		}
 
-		if (getValue(configuration, JAVA_PROJECT_ENCODING) != null) {
+		if (containsKey(configuration, JAVA_INLAYHINTS_FORMATPARAMETERS_ENABLED)) {
+			boolean inlayHintsFormatParametersEnabled = getBoolean(configuration, JAVA_INLAYHINTS_FORMATPARAMETERS_ENABLED, existing.inlayHintsFormatParametersEnabled);
+			prefs.setInlayHintsFormatParametersEnabled(inlayHintsFormatParametersEnabled);
+		}
+
+		if (containsKey(configuration, JAVA_PROJECT_ENCODING)) {
 			String projectEncoding = getString(configuration, JAVA_PROJECT_ENCODING, null);
 			prefs.setProjectEncoding(ProjectEncodingMode.fromString(projectEncoding, existing.projectEncoding));
 		}
 
-		if (getValue(configuration, JAVA_CODEACTION_SORTMEMBER_AVOIDVOLATILECHANGES) != null) {
+		if (containsKey(configuration, JAVA_CODEACTION_SORTMEMBER_AVOIDVOLATILECHANGES)) {
 			boolean avoidVolatileChanges = getBoolean(configuration, JAVA_CODEACTION_SORTMEMBER_AVOIDVOLATILECHANGES, existing.avoidVolatileChanges);
 			prefs.setAvoidVolatileChanges(avoidVolatileChanges);
 		}
 
-		if (getValue(configuration, JAVA_JDT_LS_PROTOBUF_SUPPORT_ENABLED) != null) {
+		if (containsKey(configuration, JAVA_JDT_LS_PROTOBUF_SUPPORT_ENABLED)) {
 			boolean protobufSupported = getBoolean(configuration, JAVA_JDT_LS_PROTOBUF_SUPPORT_ENABLED, existing.protobufSupportEnabled);
 			prefs.setProtobufSupportEnabled(protobufSupported);
 		}
 
-		if (getValue(configuration, JAVA_JDT_LS_JAVAC_ENABLED) != null) {
+		if (containsKey(configuration, JAVA_JDT_LS_ASPECTJ_SUPPORT_ENABLED)) {
+			boolean aspectjSupported = getBoolean(configuration, JAVA_JDT_LS_ASPECTJ_SUPPORT_ENABLED, existing.aspectjSupportEnabled);
+			prefs.setAspectjSupportEnabled(aspectjSupported);
+		}
+
+		if (containsKey(configuration, JAVA_JDT_LS_KOTLIN_SUPPORT_ENABLED)) {
+			boolean kotlinSupported = getBoolean(configuration, JAVA_JDT_LS_KOTLIN_SUPPORT_ENABLED, existing.kotlinSupportEnabled);
+			prefs.setKotlinSupportEnabled(kotlinSupported);
+		}
+
+		if (containsKey(configuration, JAVA_JDT_LS_GROOVY_SUPPORT_ENABLED)) {
+			boolean groovySupported = getBoolean(configuration, JAVA_JDT_LS_GROOVY_SUPPORT_ENABLED, existing.groovySupportEnabled);
+			prefs.setGroovySupportEnabled(groovySupported);
+		}
+
+		if (containsKey(configuration, JAVA_JDT_LS_JAVAC_ENABLED)) {
 			boolean javacEnabled = getBoolean(configuration, JAVA_JDT_LS_JAVAC_ENABLED, existing.javacEnabled);
 			prefs.setJavacEnabled(javacEnabled);
 		}
 
-		if (getValue(configuration, JAVA_JDT_LS_ANDROID_SUPPORT_ENABLED) != null) {
+		if (containsKey(configuration, JAVA_JDT_LS_ANDROID_SUPPORT_ENABLED)) {
 			boolean androidSupported = getBoolean(configuration, JAVA_JDT_LS_ANDROID_SUPPORT_ENABLED, existing.androidSupportEnabled);
 			prefs.setAndroidSupportEnabled(androidSupported);
 		}
 
-		if (getValue(configuration, JAVA_COMPILE_NULLANALYSIS_NONNULL) != null) {
+		if (containsKey(configuration, JAVA_COMPILE_NULLANALYSIS_NONNULL)) {
 			List<String> nonnullTypes = getList(configuration, JAVA_COMPILE_NULLANALYSIS_NONNULL, existing.nonnullTypes);
 			prefs.setNonnullTypes(nonnullTypes);
 		}
 
-		if (getValue(configuration, JAVA_COMPILE_NULLANALYSIS_NULLABLE) != null) {
+		if (containsKey(configuration, JAVA_COMPILE_NULLANALYSIS_NULLABLE)) {
 			List<String> nullableTypes = getList(configuration, JAVA_COMPILE_NULLANALYSIS_NULLABLE, existing.nullableTypes);
 			prefs.setNullableTypes(nullableTypes);
 		}
 
-		if (getValue(configuration, JAVA_COMPILE_NULLANALYSIS_NONNULLBYDEFAULT) != null) {
+		if (containsKey(configuration, JAVA_COMPILE_NULLANALYSIS_NONNULLBYDEFAULT)) {
 			List<String> nonullbydefaultTypes = getList(configuration, JAVA_COMPILE_NULLANALYSIS_NONNULLBYDEFAULT, existing.nonnullbydefaultTypes);
 			prefs.setNonnullbydefaultTypes(nonullbydefaultTypes);
 		}
 
-		if (getValue(configuration, JAVA_COMPILE_NULLANALYSIS_MODE) != null) {
+		if (containsKey(configuration, JAVA_COMPILE_NULLANALYSIS_MODE)) {
 			String nullAnalysisMode = getString(configuration, JAVA_COMPILE_NULLANALYSIS_MODE, null);
 			prefs.setNullAnalysisMode(FeatureStatus.fromString(nullAnalysisMode, existing.nullAnalysisMode));
 		}
 
-		if (getValue(configuration, JAVA_CLEANUPS_ACTIONS_ON_SAVE_DEPRECATED) != null || getValue(configuration, JAVA_CLEANUPS_ACTIONS) != null) {
+		if (containsKey(configuration, JAVA_CLEANUPS_ACTIONS_ON_SAVE_DEPRECATED) || containsKey(configuration, JAVA_CLEANUPS_ACTIONS)) {
 			List<String> cleanupActionsTemp = getList(configuration, JAVA_CLEANUPS_ACTIONS_ON_SAVE_DEPRECATED, Collections.emptyList());
 			List<String> cleanupActions = getList(configuration, JAVA_CLEANUPS_ACTIONS, Collections.emptyList());
 			if(cleanupActions.isEmpty() && !cleanupActionsTemp.isEmpty()) {
@@ -1794,37 +1853,37 @@ public class Preferences {
 			prefs.setCleanUpActions(cleanupActions);
 		}
 
-		if (getValue(configuration, JAVA_CLEANUPS_ACTIONS_ON_SAVE_CLEANUP) != null) {
+		if (containsKey(configuration, JAVA_CLEANUPS_ACTIONS_ON_SAVE_CLEANUP)) {
 			boolean cleanUpActionsOnSaveEnabled = getBoolean(configuration, JAVA_CLEANUPS_ACTIONS_ON_SAVE_CLEANUP, existing.cleanUpActionsOnSaveEnabled);
 			prefs.setCleanUpActionsOnSaveEnabled(cleanUpActionsOnSaveEnabled);
 		}
 
-		if (getValue(configuration, JAVA_REFACTORING_EXTRACT_INTERFACE_REPLACE) != null) {
+		if (containsKey(configuration, JAVA_REFACTORING_EXTRACT_INTERFACE_REPLACE)) {
 			boolean extractInterfaceReplaceEnabled = getBoolean(configuration, JAVA_REFACTORING_EXTRACT_INTERFACE_REPLACE, existing.extractInterfaceReplaceEnabled);
 			prefs.setExtractInterfaceReplaceEnabled(extractInterfaceReplaceEnabled);
 		}
 
-		if (getValue(configuration, JAVA_TELEMETRY_ENABLED_KEY) != null) {
+		if (containsKey(configuration, JAVA_TELEMETRY_ENABLED_KEY)) {
 			boolean telemetryEnabled = getBoolean(configuration, JAVA_TELEMETRY_ENABLED_KEY, existing.telemetryEnabled);
 			prefs.setTelemetryEnabled(telemetryEnabled);
 		}
 
-		if (getValue(configuration, JAVA_EDIT_VALIDATE_ALL_OPEN_BUFFERS_ON_CHANGES) != null) {
+		if (containsKey(configuration, JAVA_EDIT_VALIDATE_ALL_OPEN_BUFFERS_ON_CHANGES)) {
 			boolean validateAllOpenBuffers = getBoolean(configuration, JAVA_EDIT_VALIDATE_ALL_OPEN_BUFFERS_ON_CHANGES, existing.validateAllOpenBuffersOnChanges);
 			prefs.setValidateAllOpenBuffersOnChanges(validateAllOpenBuffers);
 		}
 
-		if (getValue(configuration, CHAIN_COMPLETION_KEY) != null) {
+		if (containsKey(configuration, CHAIN_COMPLETION_KEY)) {
 			boolean chainCompletionEnabled = getBoolean(configuration, CHAIN_COMPLETION_KEY, existing.chainCompletionEnabled);
 			prefs.setChainCompletionEnabled(chainCompletionEnabled);
 		}
 
-		if (getValue(configuration, JAVA_DIAGNOSTIC_FILER) != null) {
+		if (containsKey(configuration, JAVA_DIAGNOSTIC_FILER)) {
 			List<String> diagnosticFilter = getList(configuration, JAVA_DIAGNOSTIC_FILER, existing.diagnosticFilter);
 			prefs.setDiagnosticFilter(diagnosticFilter);
 		}
 
-		if (getValue(configuration, JAVA_CONFIGURATION_ASSOCIATIONS) != null) {
+		if (containsKey(configuration, JAVA_CONFIGURATION_ASSOCIATIONS)) {
 			Object object = getValue(configuration, JAVA_CONFIGURATION_ASSOCIATIONS);
 			Set<String> associations = new HashSet<>();
 			if (object instanceof Map map) {
@@ -1843,7 +1902,7 @@ public class Preferences {
 			prefs.setFilesAssociations(new ArrayList<>(associations));
 		}
 
-		if (getValue(configuration, JAVA_SEARCH_SCOPE) != null) {
+		if (containsKey(configuration, JAVA_SEARCH_SCOPE)) {
 			String searchScope = getString(configuration, JAVA_SEARCH_SCOPE, null);
 			prefs.setSearchScope(SearchScope.fromString(searchScope, existing.searchScope));
 		}
@@ -1857,6 +1916,14 @@ public class Preferences {
 
 	public void setInlayHintsParameterTypesEnabled(boolean inlayHintsParameterTypesEnabled) {
 		this.inlayHintsParameterTypesEnabled = inlayHintsParameterTypesEnabled;
+	}
+
+	public boolean isInlayHintsFormatParametersEnabled() {
+		return inlayHintsFormatParametersEnabled;
+	}
+
+	public void setInlayHintsFormatParametersEnabled(boolean inlayHintsFormatParametersEnabled) {
+		this.inlayHintsFormatParametersEnabled = inlayHintsFormatParametersEnabled;
 	}
 
 	private static boolean validateFilePattern(String filename) {
@@ -2139,6 +2206,11 @@ public class Preferences {
 		return this;
 	}
 
+	public Preferences setJavaUpdateImportsOnPasteEnabled(boolean javaUpdateImportsOnPasteEnabled) {
+		this.javaUpdateImportsOnPasteEnabled = javaUpdateImportsOnPasteEnabled;
+		return this;
+	}
+
 	public Preferences setHashCodeEqualsTemplateUseJava7Objects(boolean hashCodeEqualsTemplateUseJ7Objects) {
 		this.hashCodeEqualsTemplateUseJava7Objects = hashCodeEqualsTemplateUseJ7Objects;
 		return this;
@@ -2393,6 +2465,10 @@ public class Preferences {
 
 	public boolean isJavaSaveActionsOrganizeImportsEnabled() {
 		return javaSaveActionsOrganizeImportsEnabled;
+	}
+
+	public boolean isJavaUpdateImportsOnPasteEnabled() {
+		return javaUpdateImportsOnPasteEnabled;
 	}
 
 	public boolean isSignatureHelpEnabled() {
@@ -2780,6 +2856,14 @@ public class Preferences {
 		this.includeSourceMethodDeclarations = includeSourceMethodDeclarations;
 	}
 
+	public boolean isShowGeneratedCodeSymbols() {
+		return this.showGeneratedCodeSymbols;
+	}
+
+	public void setShowGeneratedCodeSymbols(boolean showGeneratedCodeSymbols) {
+		this.showGeneratedCodeSymbols = showGeneratedCodeSymbols;
+	}
+
 	public Preferences setInsertSpaces(boolean insertSpaces) {
 		this.insertSpaces = insertSpaces;
 		return this;
@@ -2863,6 +2947,30 @@ public class Preferences {
 
 	public void setProtobufSupportEnabled(boolean protobufSupportEnabled) {
 		this.protobufSupportEnabled = protobufSupportEnabled;
+	}
+
+	public boolean isAspectjSupportEnabled() {
+		return aspectjSupportEnabled;
+	}
+
+	public boolean isKotlinSupportEnabled() {
+		return kotlinSupportEnabled;
+	}
+
+	public boolean isGroovySupportEnabled() {
+		return groovySupportEnabled;
+	}
+
+	public void setAspectjSupportEnabled(boolean aspectjSupportEnabled) {
+		this.aspectjSupportEnabled = aspectjSupportEnabled;
+	}
+
+	public void setKotlinSupportEnabled(boolean kotlinSupportEnabled) {
+		this.kotlinSupportEnabled = kotlinSupportEnabled;
+	}
+
+	public void setGroovySupportEnabled(boolean groovySupportEnabled) {
+		this.groovySupportEnabled = groovySupportEnabled;
 	}
 
 	public boolean isAndroidSupportEnabled() {

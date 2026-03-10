@@ -12,9 +12,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.ls.core.internal.handlers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -26,6 +26,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ls.core.internal.ClassFileUtil;
+import org.eclipse.jdt.ls.core.internal.JobHelpers;
+import org.eclipse.jdt.ls.core.internal.ProjectUtils;
 import org.eclipse.jdt.ls.core.internal.ResourceUtils;
 import org.eclipse.jdt.ls.core.internal.WorkspaceHelper;
 import org.eclipse.jdt.ls.core.internal.managers.AbstractProjectsManagerBasedTest;
@@ -33,8 +35,8 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Fred Bricon
@@ -45,7 +47,7 @@ public class NavigateToDefinitionHandlerTest extends AbstractProjectsManagerBase
 	private NavigateToDefinitionHandler handler;
 	private IProject project;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		handler = new NavigateToDefinitionHandler(preferenceManager);
 		importProjects("maven/salut");
@@ -96,7 +98,7 @@ public class NavigateToDefinitionHandlerTest extends AbstractProjectsManagerBase
 		TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
 		List<? extends Location> definitions = handler.definition(new TextDocumentPositionParams(identifier, new Position(line, column)), monitor);
 		assertNotNull(definitions);
-		assertEquals("No definition found for " + className, 1, definitions.size());
+		assertEquals(1, definitions.size(), "No definition found for " + className);
 		assertNotNull(definitions.get(0).getUri());
 		assertEquals(3, definitions.get(0).getRange().getStart().getLine());
 		assertEquals(12, definitions.get(0).getRange().getStart().getCharacter());
@@ -114,7 +116,7 @@ public class NavigateToDefinitionHandlerTest extends AbstractProjectsManagerBase
 		TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
 		List<? extends Location> definitions = handler.definition(new TextDocumentPositionParams(identifier, new Position(line, column)), monitor);
 		assertNotNull(definitions);
-		assertEquals("No definition found for " + className, 1, definitions.size());
+		assertEquals(1, definitions.size(), "No definition found for " + className);
 		assertNotNull(definitions.get(0).getUri());
 		assertEquals(3, definitions.get(0).getRange().getStart().getLine());
 		assertEquals(18, definitions.get(0).getRange().getStart().getCharacter());
@@ -132,7 +134,7 @@ public class NavigateToDefinitionHandlerTest extends AbstractProjectsManagerBase
 		TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
 		List<? extends Location> definitions = handler.definition(new TextDocumentPositionParams(identifier, new Position(line, column)), monitor);
 		assertNotNull(definitions);
-		assertEquals("No definition found for " + className, 1, definitions.size());
+		assertEquals(1, definitions.size(), "No definition found for " + className);
 		assertNotNull(definitions.get(0).getUri());
 		assertEquals(7, definitions.get(0).getRange().getStart().getLine());
 		assertEquals(10, definitions.get(0).getRange().getStart().getCharacter());
@@ -146,7 +148,7 @@ public class NavigateToDefinitionHandlerTest extends AbstractProjectsManagerBase
 		String uri = ClassFileUtil.getURI(defaultProject, "Single");
 		TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
 		handler.definition(new TextDocumentPositionParams(identifier, new Position(1, 31)), monitor);
-		testClass("org.apache.commons.lang3.stringutils", 6579, 20);
+		testClass("org.apache.commons.lang3.stringutils", 145, 30);
 	}
 
 	// this test should pass when starting with -javaagent:<lombok_jar> (-javagent:~/.m2/repository/org/projectlombok/lombok/1.18.28/lombok-1.18.28.jar)
@@ -175,6 +177,33 @@ public class NavigateToDefinitionHandlerTest extends AbstractProjectsManagerBase
 		assertEquals(23, locations.get(0).getRange().getEnd().getCharacter());
 		assertNotNull(locations.get(0).getUri());
 		assertTrue(locations.get(0).getUri().endsWith("org/sample/Test.java"));
+	}
+
+	@Test
+	public void testKotlin() throws Exception {
+		boolean oldKotlinSupported = this.preferences.isKotlinSupportEnabled();
+		try {
+			this.preferences.setKotlinSupportEnabled(true);
+			importProjects("gradle/duallang");
+			IProject kotlinProject = ResourcesPlugin.getWorkspace().getRoot().getProject("duallang");
+			assertTrue(ProjectUtils.isGradleProject(kotlinProject));
+			projectsManager.projectsBuildFinished(monitor);
+			JobHelpers.waitForJobsToComplete();
+			assertNoErrors(kotlinProject);
+			String uri = ClassFileUtil.getURI(kotlinProject, "com.example.MessageApp");
+			TextDocumentIdentifier identifier = new TextDocumentIdentifier(uri);
+			List<? extends Location> locations = handler.definition(new TextDocumentPositionParams(identifier, new Position(5, 18)), monitor);
+			assertNotNull(locations);
+			assertEquals(1, locations.size());
+			assertEquals(2, locations.get(0).getRange().getStart().getLine());
+			assertEquals(2, locations.get(0).getRange().getEnd().getLine());
+			assertEquals(6, locations.get(0).getRange().getStart().getCharacter());
+			assertEquals(6, locations.get(0).getRange().getEnd().getCharacter());
+			assertNotNull(locations.get(0).getUri());
+			assertTrue(locations.get(0).getUri().endsWith("MessageService.kt"));
+		} finally {
+			this.preferences.setKotlinSupportEnabled(oldKotlinSupported);
+		}
 	}
 
 	@Test
@@ -217,7 +246,7 @@ public class NavigateToDefinitionHandlerTest extends AbstractProjectsManagerBase
 		List<? extends Location> definitions = handler
 				.definition(new TextDocumentPositionParams(identifier, new Position(line, column)), monitor);
 		assertNotNull(definitions);
-		assertEquals("No definition found for " + className, 1, definitions.size());
+		assertEquals(1, definitions.size(), "No definition found for " + className);
 		assertNotNull(definitions.get(0).getUri());
 		assertTrue(definitions.get(0).getRange().getStart().getLine() >= 0);
 	}

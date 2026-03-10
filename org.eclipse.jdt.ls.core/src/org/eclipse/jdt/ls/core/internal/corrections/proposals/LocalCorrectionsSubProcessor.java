@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2025 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -94,11 +94,14 @@ import org.eclipse.jdt.internal.ui.text.correction.proposals.CreateNewObjectProp
 import org.eclipse.jdt.internal.ui.text.correction.proposals.CreateObjectReferenceProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.CreateVariableReferenceProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.FixCorrectionProposalCore;
+import org.eclipse.jdt.internal.ui.text.correction.proposals.GenerateForLoopAssistProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.LinkedCorrectionProposalCore;
+import org.eclipse.jdt.internal.ui.text.correction.proposals.LinkedNamesAssistProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.MissingAnnotationAttributesProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.ModifierChangeCorrectionProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.NewLocalVariableCorrectionProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.NewMethodCorrectionProposalCore;
+import org.eclipse.jdt.internal.ui.text.correction.proposals.NewProviderMethodDeclarationCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.NewVariableCorrectionProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.RefactoringCorrectionProposalCore;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.ReplaceCorrectionProposalCore;
@@ -117,6 +120,22 @@ import org.eclipse.jdt.ui.text.java.correction.ASTRewriteCorrectionProposalCore;
 import org.eclipse.lsp4j.CodeActionKind;
 
 public class LocalCorrectionsSubProcessor extends LocalCorrectionsBaseSubProcessor<ProposalKindWrapper> {
+
+	public static void addServiceProviderProposal(IInvocationContext context, IProblemLocation problem, Collection<ProposalKindWrapper> proposals) throws CoreException {
+		new LocalCorrectionsSubProcessor().getServiceProviderProposal(context, problem, proposals);
+	}
+
+	public static void getUnusedObjectAllocationProposals(IInvocationContext context, IProblemLocation problem, Collection<ProposalKindWrapper> proposals) {
+		new LocalCorrectionsSubProcessor().getUnusedObjectAllocationProposalsBase(context, problem, proposals);
+	}
+
+	public static void getUnnecessaryNLSTagProposals(IInvocationContext context, IProblemLocation problem, Collection<ProposalKindWrapper> proposals) throws CoreException {
+		new LocalCorrectionsSubProcessor().getUnnecessaryNLSTagProposalsCore(context, problem, proposals);
+	}
+
+	public static void addInvalidVariableNameProposals(IInvocationContext context, IProblemLocation problem, Collection<ProposalKindWrapper> proposals) {
+		new LocalCorrectionsSubProcessor().getInvalidVariableNameProposals(context, problem, proposals);
+	}
 
 	public static void addUncaughtExceptionProposals(IInvocationContext context, IProblemLocation problem, Collection<ProposalKindWrapper> proposals) throws CoreException {
 		// See https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/1189
@@ -1028,6 +1047,21 @@ public class LocalCorrectionsSubProcessor extends LocalCorrectionsBaseSubProcess
 
 	@Override
 	protected ProposalKindWrapper assignToVariableAssistProposalToT(AssignToVariableAssistProposalCore core) {
+		return CodeActionHandler.wrap(core, CodeActionKind.QuickFix);
+	}
+
+	@Override
+	protected ProposalKindWrapper newProviderMethodDeclarationProposalToT(NewProviderMethodDeclarationCore core, int uid) {
+		return CodeActionHandler.wrap(core, CodeActionKind.QuickFix);
+	}
+
+	@Override
+	protected ProposalKindWrapper generateForLoopAssistProposalToT(GenerateForLoopAssistProposalCore core) {
+		return CodeActionHandler.wrap(core, CodeActionKind.QuickFix);
+	}
+
+	@Override
+	protected ProposalKindWrapper linkedNamesAssistProposalToT(LinkedNamesAssistProposalCore core) {
 		return CodeActionHandler.wrap(core, CodeActionKind.QuickFix);
 	}
 
