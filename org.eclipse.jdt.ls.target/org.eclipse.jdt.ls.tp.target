@@ -26,21 +26,21 @@
 			<unit id="org.eclipse.pde.junit.runtime" version="0.0.0" />
 			<unit id="org.eclipse.jdt.junit4.runtime" version="0.0.0" />
 			<unit id="org.eclipse.jdt.core.manipulation" version="0.0.0" />
-			<unit id="org.eclipse.jdt.core.compiler.batch" version="0.0.0"/>
-			<unit id="org.eclipse.jdt.core" version="0.0.0"/>
-			<unit id="org.eclipse.jdt.apt.core" version="0.0.0"/>
-			<repository location="https://download.eclipse.org/eclipse/updates/4.38/R-4.38-202512010920/"/>
+			<unit id="org.eclipse.jdt.core.compiler.batch" version="0.0.0" />
+			<unit id="org.eclipse.jdt.core" version="0.0.0" />
+			<unit id="org.eclipse.jdt.apt.core" version="0.0.0" />
+			<repository location="https://download.eclipse.org/eclipse/updates/4.38/R-4.38-202512010920/" />
 		</location>
 		<!-- org.eclipse.jdt.core.javac removed for aggregator build -->
 		<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-			<unit id="org.eclipse.xtext.xbase.lib" version="0.0.0"/>
-			<unit id="ch.qos.logback.classic" version="0.0.0"/>
-			<unit id="ch.qos.logback.core" version="0.0.0"/>
-			<repository location="https://download.eclipse.org/releases/2025-12/"/>
+			<unit id="org.eclipse.xtext.xbase.lib" version="0.0.0" />
+			<unit id="ch.qos.logback.classic" version="0.0.0" />
+			<unit id="ch.qos.logback.core" version="0.0.0" />
+			<repository location="https://download.eclipse.org/releases/2025-12/" />
 		</location>
 		<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-		   <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.24.0/"/>
-		   <unit id="org.eclipse.lsp4j" version="0.0.0"/>
+		   <repository location="https://download.eclipse.org/lsp4j/updates/releases/0.24.0/" />
+		   <unit id="org.eclipse.lsp4j" version="0.0.0" />
 		</location>
 		<location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven">
 			<dependencies>
@@ -88,5 +88,5 @@
 			<exclude>org.jsoup:jsoup:1.15.4</exclude>
 		</location>
 	</locations>
-	<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-25"/>
+	<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-25" />
 </target>
