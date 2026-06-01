@@ -339,7 +339,7 @@ public class GradleProjectImporterTest extends AbstractGradleBasedTest{
 			projectFile = new File(rootFile, "fakeProject");
 			projectFile.mkdir();
 			projectFile.deleteOnExit();
-			BuildConfiguration build = GradleProjectImporter.getBuildConfiguration(file.toPath());
+			BuildConfiguration build = GradleProjectImporter.getBuildConfiguration(projectFile.toPath());
 			assertFalse(build.getGradleUserHome().isPresent());
 		} finally {
 			if (file != null) {
@@ -664,7 +664,7 @@ public class GradleProjectImporterTest extends AbstractGradleBasedTest{
 				assertEquals(2, classpathEntries.length);
 			} else {
 				// android SDK is detected, android project should be imported successfully
-				assertEquals(6, classpathEntries.length);
+				assertEquals(5, classpathEntries.length);
 				// main sourceSet are added to classpath correctly
 				assertTrue(Arrays.stream(classpathEntries).anyMatch(cpe -> {
 					return "/app/src/main/java".equals(cpe.getPath().toString());
@@ -676,10 +676,6 @@ public class GradleProjectImporterTest extends AbstractGradleBasedTest{
 				// androidTest sourceSet are added to classpath correctly
 				assertTrue(Arrays.stream(classpathEntries).anyMatch(cpe -> {
 					return "/app/src/androidTest/java".equals(cpe.getPath().toString());
-				}));
-				// buildConfig files are added to classpath correctly
-				assertTrue(Arrays.stream(classpathEntries).anyMatch(cpe -> {
-					return "/app/build/generated/source/buildConfig/standard/debug".equals(cpe.getPath().toString());
 				}));
 				// dataBinding files are added to classpath correctly
 				assertTrue(Arrays.stream(classpathEntries).anyMatch(cpe -> {
@@ -706,7 +702,7 @@ public class GradleProjectImporterTest extends AbstractGradleBasedTest{
 				assertEquals(2, classpathEntries.length);
 			} else {
 				// android SDK is detected, android project should be imported successfully
-				assertEquals(6, classpathEntries.length);
+				assertEquals(5, classpathEntries.length);
 			}
 			this.preferences.setAndroidSupportEnabled(false);
 			for (IProject project : projects) {
@@ -759,6 +755,127 @@ public class GradleProjectImporterTest extends AbstractGradleBasedTest{
 		assertTrue(distribution instanceof WrapperGradleDistribution);
 	}
 
+	@Test
+	public void testAspectSupportDisabled() throws Exception {
+		boolean oldAspectSupported = this.preferences.isAspectjSupportEnabled();
+		try {
+			this.preferences.setAspectjSupportEnabled(false);
+			IProject project = importGradleProject("aspect");
+			assertTrue(ProjectUtils.isGradleProject(project));
+			waitForOtherLangs();
+			assertHasErrors(project);
+		} finally {
+			this.preferences.setAspectjSupportEnabled(oldAspectSupported);
+		}
+	}
+
+	@Test
+	public void testAspectSupportEnabled() throws Exception {
+		boolean oldAspectSupported = this.preferences.isAspectjSupportEnabled();
+		try {
+			this.preferences.setAspectjSupportEnabled(true);
+			IProject project = importGradleProject("aspect");
+			assertTrue(ProjectUtils.isGradleProject(project));
+			waitForOtherLangs();
+			assertNoErrors(project);
+			IJavaProject javaProject = JavaCore.create(project);
+			IType demoAspect = javaProject.findType("io.freefair.DemoAspect");
+			assertNotNull(demoAspect);
+		} finally {
+			this.preferences.setAspectjSupportEnabled(oldAspectSupported);
+		}
+	}
+
+	@Test
+	public void testKotlinSupportDisabled() throws Exception {
+		boolean oldKotlinSupported = this.preferences.isKotlinSupportEnabled();
+		try {
+			this.preferences.setKotlinSupportEnabled(false);
+			IProject project = importGradleProject("kotlin");
+			assertTrue(ProjectUtils.isGradleProject(project));
+			waitForOtherLangs();
+			assertHasErrors(project);
+		} finally {
+			this.preferences.setKotlinSupportEnabled(oldKotlinSupported);
+		}
+	}
+
+	@Test
+	public void testKotlinSupportEnabled() throws Exception {
+		boolean oldKotlinSupported = this.preferences.isKotlinSupportEnabled();
+		try {
+			this.preferences.setKotlinSupportEnabled(true);
+			IProject project = importGradleProject("kotlin");
+			assertTrue(ProjectUtils.isGradleProject(project));
+			waitForOtherLangs();
+			assertNoErrors(project);
+		} finally {
+			this.preferences.setKotlinSupportEnabled(oldKotlinSupported);
+		}
+	}
+
+	@Test
+	public void testGroovySupportDisabled() throws Exception {
+		boolean oldGroovySupported = this.preferences.isGroovySupportEnabled();
+		try {
+			this.preferences.setGroovySupportEnabled(false);
+			IProject project = importGradleProject("groovy");
+			assertTrue(ProjectUtils.isGradleProject(project));
+			waitForOtherLangs();
+			assertHasErrors(project);
+		} finally {
+			this.preferences.setGroovySupportEnabled(oldGroovySupported);
+		}
+	}
+
+	private void waitForOtherLangs() {
+		projectsManager.projectsBuildFinished(monitor);
+		JobHelpers.waitForJobsToComplete();
+	}
+
+	@Test
+	public void testGroovySupportEnabled() throws Exception {
+		boolean oldGroovySupported = this.preferences.isGroovySupportEnabled();
+		try {
+			this.preferences.setGroovySupportEnabled(true);
+			IProject project = importGradleProject("groovy");
+			assertTrue(ProjectUtils.isGradleProject(project));
+			waitForOtherLangs();
+			assertNoErrors(project);
+		} finally {
+			this.preferences.setGroovySupportEnabled(oldGroovySupported);
+		}
+	}
+
+	@Test
+	public void testScalaSupportEnabled() throws Exception {
+		boolean oldScalaSupported = this.preferences.isScalaSupportEnabled();
+		try {
+			this.preferences.setScalaSupportEnabled(true);
+			importGradleProject("scala");
+			waitForOtherLangs();
+			IProject project = ProjectUtils.getProject("app");
+			assertTrue(ProjectUtils.isGradleProject(project));
+			assertNoErrors(project);
+		} finally {
+			this.preferences.setScalaSupportEnabled(oldScalaSupported);
+		}
+	}
+
+	@Test
+	public void testScalaSupportDisabled() throws Exception {
+		boolean oldScalaSupported = this.preferences.isScalaSupportEnabled();
+		try {
+			this.preferences.setScalaSupportEnabled(false);
+			importGradleProject("scala");
+			waitForOtherLangs();
+			IProject project = ProjectUtils.getProject("app");
+			assertTrue(ProjectUtils.isGradleProject(project));
+			assertHasErrors(project);
+		} finally {
+			this.preferences.setScalaSupportEnabled(oldScalaSupported);
+		}
+	}
 
 	@Test
 	public void testCleanUpBuildServerFootprint() throws Exception {

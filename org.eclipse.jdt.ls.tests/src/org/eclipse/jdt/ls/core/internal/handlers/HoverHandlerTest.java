@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016-2017 Red Hat Inc. and others.
+ * Copyright (c) 2016-2026 Red Hat Inc. and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -212,8 +212,12 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 			Hover hover = handler.hover(position, monitor);
 			assertNotNull(hover);
 			assertNotNull(hover.getContents());
-			assertEquals(1, hover.getContents().getLeft().size());
+			assertEquals(2, hover.getContents().getLeft().size());
 			assertEquals("com.aspose.words.Document.Document(String fileName) throws Exception", hover.getContents().getLeft().get(0).getRight().getValue());
+			String source = hover.getContents().getLeft().get(1).getLeft();
+			String prefix = "Source: *[aspose-words-15.12.0-jdk16.jar](jdt://contents/aspose-words-15.12.0-jdk16.jar/com.aspose.words/Document.class?";
+			assertTrue(source.startsWith(prefix), "Unexpected Source from " + source);
+			assertFalse(source.substring(prefix.length()).contains("("), "Source URL is not sanitized: " + source);
 		} finally {
 			if (unit != null) {
 				unit.discardWorkingCopy();
@@ -324,7 +328,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		ICompilationUnit cu = pack1.createCompilationUnit("E.java", buf.toString(), false, null);
 		Hover hover = getHover(cu, 1, 8);
 		assertNotNull(hover);
-		assertEquals(1, hover.getContents().getLeft().size());
+		assertEquals(2, hover.getContents().getLeft().size());
 		assertEquals("javax", hover.getContents().getLeft().get(0).getRight().getValue(), "Unexpected hover ");
 	}
 
@@ -343,6 +347,10 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		assertNotNull(hover);
 		String result = hover.getContents().getLeft().get(0).getRight().getValue();//
 		assertEquals("org.apache.commons", result, "Unexpected hover ");
+
+		String source = hover.getContents().getLeft().get(1).getLeft();
+		//Package source should have no link
+		assertEquals("Source: *commons-cli-1.4.jar*", source, "Unexpected source");
 
 		assertEquals(0, logListener.getErrors().size(), logListener.getErrors().toString());
 	}
@@ -397,7 +405,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		// when
 		Hover hover = handler.hover(position, monitor);
 		assertNotNull(hover, "Hover is null");
-		assertEquals(2, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
+		assertEquals(3, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
 		Either<String, MarkedString> javadoc = hover.getContents().getLeft().get(1);
 		String content = null;
 		assertTrue(javadoc != null && javadoc.getLeft() != null && (content = javadoc.getLeft()) != null, "javadoc has null content");
@@ -417,7 +425,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		// when
 		Hover hover = handler.hover(position, monitor);
 		assertNotNull(hover, "Hover is null");
-		assertEquals(2, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
+		assertEquals(3, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
 		Either<String, MarkedString> javadoc = hover.getContents().getLeft().get(1);
 		String content = null;
 		assertTrue(javadoc != null && javadoc.getLeft() != null && (content = javadoc.getLeft()) != null, "javadoc has null content");
@@ -436,7 +444,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		// when
 		Hover hover = handler.hover(position, monitor);
 		assertNotNull(hover, "Hover is null");
-		assertEquals(2, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
+		assertEquals(3, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
 		Either<String, MarkedString> javadoc = hover.getContents().getLeft().get(1);
 		String content = null;
 		assertTrue(javadoc != null && javadoc.getLeft() != null && (content = javadoc.getLeft()) != null, "javadoc has null content");
@@ -456,11 +464,16 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		// when
 		Hover hover = handler.hover(position, monitor);
 		assertNotNull(hover, "Hover is null");
-		assertEquals(2, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
+		assertEquals(3, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
 		Either<String, MarkedString> javadoc = hover.getContents().getLeft().get(1);
 		String content = null;
 		assertTrue(javadoc != null && javadoc.getLeft() != null && (content = javadoc.getLeft()) != null, "javadoc has null content");
 		assertMatches("\\[Foo.linkedFromFoo2\\(\\)\\]\\(file:/.*/salut/src/main/java/java/Foo.java#14\\)", content);
+
+		String source = hover.getContents().getLeft().get(2).getLeft();
+		//Project source should link to project file
+		assertMatches("Source: \\*\\[salut\\]\\(file:/.*/salut/src/main/java/java/Foo2.java#30\\)\\*", source);
+
 	}
 
 	@Test
@@ -475,7 +488,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		// when
 		Hover hover = handler.hover(position, monitor);
 		assertNotNull(hover, "Hover is null");
-		assertEquals(2, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
+		assertEquals(3, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
 		Either<String, MarkedString> javadoc = hover.getContents().getLeft().get(1);
 		String content = null;
 		assertTrue(javadoc != null && javadoc.getLeft() != null && (content = javadoc.getLeft()) != null, "javadoc has null content");
@@ -520,11 +533,11 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		// when
 		Hover hover = handler.hover(position, monitor);
 		assertNotNull(hover, "Hover is null");
-		assertEquals(2, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
+		assertEquals(3, hover.getContents().getLeft().size(), "Unexpected hover contents:\n" + hover.getContents());
 		Either<String, MarkedString> javadoc = hover.getContents().getLeft().get(1);
 		String content = null;
 		assertTrue(javadoc != null && javadoc.getLeft() != null && (content = javadoc.getLeft()) != null, "javadoc has null content");
-		assertMatches("This link doesnt work \\[LinkToSomethingNotFound\\]\\(\\)", content);
+		assertMatches("This link doesnt work LinkToSomethingNotFound", content);
 	}
 
 	@Test
@@ -546,7 +559,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		ICompilationUnit cu = pack1.createCompilationUnit("Meh.java", content, false, null);
 		Hover hover = getHover(cu, 9, 15);
 		assertNotNull(hover);
-		assertEquals(2, hover.getContents().getLeft().size());
+		assertEquals(3, hover.getContents().getLeft().size());
 
 		//@formatter:off
 		String expectedJavadoc = """
@@ -602,18 +615,18 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		ICompilationUnit cu = pack1.createCompilationUnit("Test.java", buf.toString(), false, null);
 		Hover hover = getHover(cu, 11, 15);
 		assertNotNull(hover);
-		assertEquals(2, hover.getContents().getLeft().size());
+		assertEquals(3, hover.getContents().getLeft().size());
 
 		//@formatter:off
 		String expectedJavadoc = """
 			A simple program.
 
-			&nbsp;class HelloWorld { \s
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public static void main(String... args) { \s
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;System.out.**println**("Hello World!");   \s
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}\s\s
-			&nbsp;} \s
-			  \s
+			class HelloWorld { \s
+			public static void main(String... args) { \s
+			System.out.**println**("Hello World!"); \s
+			}\s\s
+			} \s
+			 \s
 			""";
 		//@formatter:on
 		String actual = hover.getContents().getLeft().get(1).getLeft();
@@ -646,14 +659,14 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		ICompilationUnit cu = pack1.createCompilationUnit("Test.java", buf.toString(), false, null);
 		Hover hover = getHover(cu, 7, 15);
 		assertNotNull(hover);
-		assertEquals(2, hover.getContents().getLeft().size());
+		assertEquals(3, hover.getContents().getLeft().size());
 
 		//@formatter:off
 		String expectedJavadoc = """
 			A simple program.
 
-			&nbsp;&nbsp;&nbsp;int x = 1;\s\s
-			  \s
+			int x = 1;\s\s
+			 \s
 			""";
 		//@formatter:on
 		String actual = hover.getContents().getLeft().get(1).getLeft();
@@ -685,7 +698,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		ICompilationUnit cu = pack1.createCompilationUnit("Test.java", buf.toString(), false, null);
 		Hover hover = getHover(cu, 6, 15);
 		assertNotNull(hover);
-		assertEquals(2, hover.getContents().getLeft().size());
+		assertEquals(3, hover.getContents().getLeft().size());
 
 		//@formatter:off
 		String expectedJavadoc = """
@@ -761,7 +774,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		ICompilationUnit cu = pack1.createCompilationUnit("Test.java", buf.toString(), false, null);
 		Hover hover = getHover(cu, 37, 15);
 		assertNotNull(hover);
-		assertEquals(2, hover.getContents().getLeft().size());
+		assertEquals(3, hover.getContents().getLeft().size());
 
 		//@formatter:off
 		String expectedJavadoc = """
@@ -855,6 +868,10 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		String javadoc = hover.getContents().getLeft().get(0).getRight().getValue();
 		assertEquals("String java.lang.String.toUpperCase()", javadoc);
 
+		String source = hover.getContents().getLeft().get(2).getLeft();
+		//JDK source should link to java file
+		assertMatches("Source: \\*\\[Java 10\\]\\(jdt:/.*\\)\\*", source);
+
 	}
 
 	@Test
@@ -896,7 +913,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 	@Test
 	public void testNoLinkWhenClassContentUnsupported() throws Exception {
 		initPreferenceManager(false);
-		testClassContentSupport("Uses \\[WordUtils\\]\\(\\)");
+		testClassContentSupport("Uses WordUtils");
 	}
 
 	@Test
@@ -967,7 +984,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		ICompilationUnit cu = pack1.createCompilationUnit("Test.java", buf.toString(), false, null);
 		Hover hover = getHover(cu, 7, 18);
 		assertNotNull(hover);
-		assertEquals(2, hover.getContents().getLeft().size());
+		assertEquals(3, hover.getContents().getLeft().size());
 
 		//@formatter:off
 		String expectedJavadoc = "## TestClass  \n"
@@ -1041,7 +1058,7 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		ICompilationUnit cu = pack1.createCompilationUnit("Meh.java", content, false, null);
 		Hover hover = getHover(cu, 4, 14);
 		assertNotNull(hover);
-		assertEquals(2, hover.getContents().getLeft().size());
+		assertEquals(3, hover.getContents().getLeft().size());
 
 		//@formatter:off
 		String expectedJavadoc = "Some _\"locale-sensitive\"_ text.";
@@ -1049,5 +1066,63 @@ public class HoverHandlerTest extends AbstractProjectsManagerBasedTest {
 		String actual = hover.getContents().getLeft().get(1).getLeft();
 		actual = ResourceUtils.dos2Unix(actual);
 		assertEquals(expectedJavadoc, actual, "Unexpected hover ");
+	}
+
+	@Test
+	public void testHoverInlineLinkTagInMarkdown_01() throws Exception {
+		String name = "java25";
+		importProjects("eclipse/" + name);
+		IProject project = getProject(name);
+		IJavaProject javaProject = JavaCore.create(project);
+		IPackageFragmentRoot packageFragmentRoot = javaProject.getPackageFragmentRoot(project.getFolder("src/main/java"));
+		IPackageFragment pack1 = packageFragmentRoot.createPackageFragment("test", false, null);
+		StringBuilder buf = new StringBuilder();
+		//@formatter:off
+		buf.append("package test;\n"
+				+ "/// {@link #newMethodBeingLinkedToo}\n"
+				+ "public class Markdown{}"
+		);
+		//@formatter:on
+		ICompilationUnit cu = pack1.createCompilationUnit("Markdown.java", buf.toString(), false, null);
+		Hover hover = getHover(cu, 2, 14);
+		assertNotNull(hover);
+		assertEquals(3, hover.getContents().getLeft().size());
+
+		String uri = JDTUtils.toURI(cu) + "#3";
+		//@formatter:off
+		String expectedJavadoc = "[newMethodBeingLinkedToo](" + uri +")";
+		//@formatter:on
+		String actual = hover.getContents().getLeft().get(1).getLeft();
+		actual = ResourceUtils.dos2Unix(actual);
+		assertEquals(expectedJavadoc.toString(), actual.stripTrailing(), "Unexpected hover ");
+	}
+
+	@Test
+	public void testHoverInlineLinkTagInMarkdown_02() throws Exception {
+		String name = "java25";
+		importProjects("eclipse/" + name);
+		IProject project = getProject(name);
+		IJavaProject javaProject = JavaCore.create(project);
+		IPackageFragmentRoot packageFragmentRoot = javaProject.getPackageFragmentRoot(project.getFolder("src/main/java"));
+		IPackageFragment pack1 = packageFragmentRoot.createPackageFragment("test", false, null);
+		StringBuilder buf = new StringBuilder();
+		//@formatter:off
+		buf.append("package test;\n"
+				+ "/// {@linkplain #newMethodBeingLinkedToo}\n"
+				+ "public class Markdown{}"
+		);
+		//@formatter:on
+		ICompilationUnit cu = pack1.createCompilationUnit("Markdown.java", buf.toString(), false, null);
+		Hover hover = getHover(cu, 2, 14);
+		assertNotNull(hover);
+		assertEquals(3, hover.getContents().getLeft().size());
+
+		String uri = JDTUtils.toURI(cu) + "#3";
+		//@formatter:off
+		String expectedJavadoc = "[newMethodBeingLinkedToo](" + uri +")";
+		//@formatter:on
+		String actual = hover.getContents().getLeft().get(1).getLeft();
+		actual = ResourceUtils.dos2Unix(actual);
+		assertEquals(expectedJavadoc.toString(), actual.stripTrailing(), "Unexpected hover ");
 	}
 }

@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
@@ -201,6 +202,20 @@ public class CompletionResolveHandler {
 					return param;
 				}
 			}
+		} else if (proposal.getKind() == CompletionProposal.MODULE_REF || proposal.getKind() == CompletionProposal.MODULE_DECLARATION) {
+			// Resolve module documentation
+			String moduleName = getModuleName(proposal);
+			if (moduleName != null) {
+				try {
+					IModuleDescription module = unit.getJavaProject().findModule(moduleName, null);
+					if (module != null) {
+						member = module;
+					}
+				} catch (JavaModelException e) {
+					JavaLanguageServerPlugin.logException(e.getMessage(), e);
+					return param;
+				}
+			}
 		} else {
 			char[] declarationSignature = proposal.getDeclarationSignature();
 			if (declarationSignature != null) {
@@ -351,6 +366,15 @@ public class CompletionResolveHandler {
 			}
 		}
 		return param;
+	}
+
+	private static String getModuleName(CompletionProposal proposal) {
+		char[] declaration = proposal.getDeclarationSignature();
+		if (declaration != null && declaration.length > 0) {
+			return String.valueOf(declaration);
+		}
+		char[] completion = proposal.getCompletion();
+		return completion != null && completion.length > 0 ? String.valueOf(completion) : null;
 	}
 
 }

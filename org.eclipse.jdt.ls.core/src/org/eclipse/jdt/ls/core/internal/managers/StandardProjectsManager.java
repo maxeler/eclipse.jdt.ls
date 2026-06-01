@@ -302,6 +302,8 @@ public class StandardProjectsManager extends ProjectsManager {
 							appendBuildFileMarker(resource);
 							break;
 					}
+				} else {
+					buildSupport.compile(resource, null);
 				}
 			}
 		} catch (CoreException e) {
@@ -577,7 +579,7 @@ public class StandardProjectsManager extends ProjectsManager {
 	}
 
 	private List<URI> getURIs(String url) {
-		if (url == null) {
+		if (url == null || url.isBlank()) {
 			return Collections.emptyList();
 		}
 		List<URI> result = new ArrayList<>();
@@ -722,6 +724,13 @@ public class StandardProjectsManager extends ProjectsManager {
 			this.shouldUpdateProjects = false;
 		}
 		this.preferenceManager.getPreferences().updateAnnotationNullAnalysisOptions();
+		new ScalaGradleSupport().cleanScalaProjects(monitor);
+		ProjectsManager projectsManager = JavaLanguageServerPlugin.getProjectsManager();
+		if (projectsManager != null) {
+			projectsManager.buildSupports().forEach(bs -> {
+				bs.compile(null, monitor);
+			});
+		}
 	}
 
 	@Override

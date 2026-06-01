@@ -717,6 +717,30 @@ public class GradleProjectImporter extends AbstractProjectImporter {
 			addInitScriptToArgs(androidInitScript, args);
 		}
 
+		// Add init script of aspectj support
+		if (preferencesManager.getPreferences().isAspectjSupportEnabled()) {
+			File aspectjInitScript = GradleUtils.getGradleInitScript("/gradle/aspectj/init.gradle");
+			addInitScriptToArgs(aspectjInitScript, args);
+		}
+
+		// Add init script of kotlin support
+		if (preferencesManager.getPreferences().isKotlinSupportEnabled()) {
+			File kotlinInitScript = GradleUtils.getGradleInitScript("/gradle/kotlin/init.gradle");
+			addInitScriptToArgs(kotlinInitScript, args);
+		}
+
+		// Add init script of groovy support
+		if (preferencesManager.getPreferences().isGroovySupportEnabled()) {
+			File groovyInitScript = GradleUtils.getGradleInitScript("/gradle/groovy/init.gradle");
+			addInitScriptToArgs(groovyInitScript, args);
+		}
+
+		// Add init script of scala support
+		if (preferencesManager.getPreferences().isScalaSupportEnabled()) {
+			File scalaInitScript = GradleUtils.getGradleInitScript("/gradle/scala/init.gradle");
+			addInitScriptToArgs(scalaInitScript, args);
+		}
+
 		return args;
 	}
 

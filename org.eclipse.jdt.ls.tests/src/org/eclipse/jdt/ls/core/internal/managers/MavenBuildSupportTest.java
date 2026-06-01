@@ -164,7 +164,7 @@ public class MavenBuildSupportTest extends AbstractMavenBasedTest {
 
 	@Test
 	public void testDownloadSources() throws Exception {
-		File file = DependencyUtil.getSources("org.apache.commons", "commons-lang3", "3.5");
+		File file = DependencyUtil.getSources("org.apache.commons", "commons-lang3", "3.18.0");
 		FileUtils.deleteDirectory(file.getParentFile());
 		boolean mavenDownloadSources = preferences.isMavenDownloadSources();
 		try {
@@ -182,6 +182,34 @@ public class MavenBuildSupportTest extends AbstractMavenBasedTest {
 				source = new SourceContentProvider().getSource(classFile, new NullProgressMonitor());
 			}
 			assertNotNull(source, "Couldn't find source for " + type.getFullyQualifiedName() + "(" + file.getAbsolutePath() + (file.exists() ? " exists)" : " is missing)"));
+		} finally {
+			preferences.setMavenDownloadSources(mavenDownloadSources);
+		}
+	}
+
+	@Test
+	public void testDownloadSourcesWhenSHA1SearchFails() throws Exception {
+		File javadocFile = DependencyUtil.getSources("org.springframework", "spring-core", "7.0.2");
+		FileUtils.deleteDirectory(javadocFile.getParentFile());
+		boolean mavenDownloadSources = preferences.isMavenDownloadSources();
+		try {
+			preferences.setMavenDownloadSources(false);
+			IProject project = importMavenProject("spring");
+			waitForBackgroundJobs();
+			assertTrue(!javadocFile.exists());
+			IJavaProject javaProject = JavaCore.create(project);
+			IType type = javaProject.findType("org.springframework.util.StringUtils");
+			assertNotNull(type, "Couldn't find type org.springframework.util.StringUtils");
+			IClassFile classFile = ((BinaryType) type).getClassFile();
+			assertNull(classFile.getBuffer());
+			String source = new SourceContentProvider().getSource(classFile, new NullProgressMonitor());
+			if (source == null) {
+				JobHelpers.waitForDownloadSourcesJobs(JobHelpers.MAX_TIME_MILLIS);
+				source = new SourceContentProvider().getSource(classFile, new NullProgressMonitor());
+			}
+			assertNotNull(source, "Couldn't find source for " + type.getFullyQualifiedName());
+			assertTrue(source.contains("This class delivers some simple functionality"),
+					"Source for " + type.getFullyQualifiedName() + " should contain 'This class delivers some simple functionality'. Source: " + source);
 		} finally {
 			preferences.setMavenDownloadSources(mavenDownloadSources);
 		}

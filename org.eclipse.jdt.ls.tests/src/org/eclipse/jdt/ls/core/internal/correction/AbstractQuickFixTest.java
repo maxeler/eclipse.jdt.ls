@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -59,6 +61,8 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class AbstractQuickFixTest extends AbstractProjectsManagerBasedTest {
 
@@ -67,6 +71,18 @@ public class AbstractQuickFixTest extends AbstractProjectsManagerBasedTest {
 	private List<String> ignoredKinds = Arrays.asList(CodeActionKind.Source + ".*");
 
 	private List<String> onlyKinds;
+
+	private Hashtable<String, String> oldOptions;
+
+	@AfterEach
+	public void cleanOptions() throws Exception {
+		JavaCore.setOptions(oldOptions);
+	}
+
+	@BeforeEach
+	public void setOptions() throws Exception {
+		oldOptions = JavaCore.getOptions();
+	}
 
 	protected void assertCodeActionExists(ICompilationUnit cu, Expected expected) throws Exception {
 		List<Either<Command, CodeAction>> codeActions = evaluateCodeActions(cu);
@@ -83,6 +99,13 @@ public class AbstractQuickFixTest extends AbstractProjectsManagerBasedTest {
 	protected void assertCodeActionExists(ICompilationUnit cu, String label) throws Exception {
 		List<Either<Command, CodeAction>> codeActionCommands = evaluateCodeActions(cu);
 		assertTrue(codeActionCommands.stream().filter(ca -> getTitle(ca).equals(label)).findAny().isPresent(), "'" + label + "' should exist within the code actions");
+	}
+
+	protected void assertCodeActionExists(ICompilationUnit cu, String[] labels) throws Exception {
+		List<Either<Command, CodeAction>> codeActionCommands = evaluateCodeActions(cu);
+		for (String label : labels) {
+			assertTrue(codeActionCommands.stream().filter(ca -> getTitle(ca).equals(label)).findAny().isPresent(), "'" + label + "' should exist within the code actions");
+		}
 	}
 
 	protected void assertCodeActionNotExists(ICompilationUnit cu, String label) throws Exception {
@@ -113,14 +136,30 @@ public class AbstractQuickFixTest extends AbstractProjectsManagerBasedTest {
 		assertCodeActions(codeActions, expecteds);
 	}
 
+	protected void assertCodeActionsMultiFile(ICompilationUnit cu, Range range, Expected... expecteds) throws Exception {
+		List<Either<Command, CodeAction>> codeActions = evaluateCodeActions(cu, range);
+		Map<String, Either<Command, CodeAction>> actualActions = codeActions.stream().collect(Collectors.toMap(this::getTitle, Function.identity(), ((first, second) -> first), LinkedHashMap::new));
+		Either<Command, CodeAction> action = actualActions.get(expecteds[0].name);
+		WorkspaceEdit we = action.getRight().getEdit();
+		Iterator<Entry<String, List<TextEdit>>> editEntries = we.getChanges().entrySet().iterator();
+		for (Expected expected : expecteds) {
+			Entry<String, List<TextEdit>> entry = editEntries.next();
+			assertNotNull(entry, "No edits generated");
+			String actionContent = ResourceUtils.dos2Unix(evaluateChanges(entry.getKey(), entry.getValue()));
+			actionContent = ResourceUtils.dos2Unix(actionContent);
+			String content = ResourceUtils.dos2Unix(expected.content);
+			assertEquals(content, actionContent, getTitle(action) + " has the wrong content ");
+		}
+	}
+
 	protected void assertCodeActions(List<Either<Command, CodeAction>> codeActions, Expected... expecteds) throws Exception {
 		if (codeActions.size() < expecteds.length) {
 			String res = codeActions.stream().map(a -> ("'" + getTitle(a) + "'")).collect(Collectors.joining(","));
 			assertEquals(expecteds.length, codeActions.size(), "Number of code actions: " + res);
 		}
 
-		Map<String, Expected> expectedActions = Stream.of(expecteds).collect(Collectors.toMap(Expected::getName, Function.identity()));
 		Map<String, Either<Command, CodeAction>> actualActions = codeActions.stream().collect(Collectors.toMap(this::getTitle, Function.identity(), ((first, second) -> first), LinkedHashMap::new));
+		Map<String, Expected> expectedActions = Stream.of(expecteds).collect(Collectors.toMap(Expected::getName, Function.identity()));
 
 		for (Expected expected : expecteds) {
 			Either<Command, CodeAction> action = actualActions.get(expected.name);
@@ -313,20 +352,13 @@ public class AbstractQuickFixTest extends AbstractProjectsManagerBasedTest {
 	protected String evaluateCodeActionCommand(Either<Command, CodeAction> codeAction)
 			throws BadLocationException, JavaModelException {
 
-		Command c = codeAction.isLeft() ? codeAction.getLeft() : codeAction.getRight().getCommand();
-		if (c != null) {
-			assertEquals(CodeActionHandler.COMMAND_ID_APPLY_EDIT, c.getCommand());
-			assertNotNull(c.getArguments());
-			assertTrue(c.getArguments().get(0) instanceof WorkspaceEdit);
-			WorkspaceEdit we = (WorkspaceEdit) c.getArguments().get(0);
-			return evaluateWorkspaceEdit(we);
-		} else {
-			WorkspaceEdit we = codeAction.getRight().getEdit();
-			if (we.getDocumentChanges() != null) {
-				return evaluateChanges(we.getDocumentChanges());
-			}
-			return evaluateChanges(we.getChanges());
+		assertTrue(codeAction.isRight(), "Expected CodeAction, got Command: " + codeAction.getLeft());
+
+		WorkspaceEdit we = codeAction.getRight().getEdit();
+		if (we.getDocumentChanges() != null) {
+			return evaluateChanges(we.getDocumentChanges());
 		}
+		return evaluateChanges(we.getChanges());
 	}
 
 	public static String evaluateWorkspaceEdit(WorkspaceEdit edit) throws JavaModelException, BadLocationException {

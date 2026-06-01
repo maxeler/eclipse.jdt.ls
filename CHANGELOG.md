@@ -1,5 +1,48 @@
 # Change Log
 
+# [1.58.0 (April 15th, 2026)](https://github.com/eclipse-jdtls/eclipse.jdt.ls/milestone/151?closed=1)
+ * enhancement - Progressive project import notifications for tree view. See [#3744](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3744).
+ * enhancement - Support Termux. See [#3742](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3742).
+ * enhancement - Add Null Annotation quick-fixes from JDT to jdt.ls. See [#3727](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3727).
+ * enhancement - Remove the first blank line from generated classes created in the default package. See [#3725](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3725).
+ * enhancement - Add inlay hints for format parameters. See [#3726](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3726).
+ * enhancement - Add quick-assist to convert a class to a record. See [#3723](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3723).
+ * enhancement - Support Scala in Gradle projects. See [#3734](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3734).
+ * enhancement - Enable change compiler compliance quick-fixes. See [#3743](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3743).
+ * bug fix - Navigating to a Kotlin class now opens the sources instead of the decompiled code. See [#3724](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3724).
+
+# [1.57.0 (February 26th, 2026)](https://github.com/eclipse/eclipse.jdt.ls/milestone/150?closed=1)
+ * enhancement - Have class URIs use their original source name. See [#3666](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3666).
+ * enhancement - Add setting to disable adding imports on paste. See [#3700](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3700).
+ * enhancement - Set `o.e.j.core.compiler.problem.forbiddenReference=ignore` by default. See [#3720](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3720).
+ * enhancement - Add setting to show generated code in document symbols. See [#3706](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3706).
+ * enhancement - Log server version+commit on startup. See [#3689](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3689).
+ * bug fix - Fix python launcher in a custom environment. See [#3701](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3701).
+ * bug fix - Fix code completion in JEP 512: Compact Source Files with static variables. See [#3680](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3680).
+ * bug fix - JEP 511: module completion now shows documentation. See [#3710](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3710).
+ * bug fix - Fix wrong Javadoc rendering (missing close parenthesis for links) on hover. See [#3705](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3705).
+ * dependencies - Update JUnit to 5.14.3. See [#3712](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3712).
+ * dependencies - Bump `org.codehaus.gmavenplus:gmavenplus-plugin` from 4.3.0 to 4.3.1. See [#3707](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3707).
+ * dependencies - Update Fernflower to 253.29346.240, fetched via the target platform. See [#3667](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3667).
+ * dependencies - Bump `org.eclipse.cbi.maven.plugins:eclipse-jarsigner-plugin` from 1.5.3 to 1.5.4. See [#3715](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3715).
+
+# [1.56.0 (January 29th, 2026)](https://github.com/eclipse/eclipse.jdt.ls/milestone/149?closed=1)
+ * enhancement - Add library info on hover. See [#3678](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3678).
+ * enhancement - Support AspectJ in Gradle projects. See [#3670](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3670).
+ * enhancement - Enable more quick-fixes from upstream JDT. See [#3660](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3660).
+ * bug fix - Fix wrong type mismatch errors. See [#3691](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3691).
+ * bug fix - Fix incorrect Markdown hover rendering for inline `{@link}`/`{@linkplain}` member references. See [#3655](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3655).
+ * bug fix - Watch `java.settings.url` file modifications. See [#3679](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3679).
+ * bug fix - Don't create unnecessary new lines when pasting text including literal `\n`. See [#3674](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3674).
+ * bug fix - Fix unreliable Maven artifact search. See [#3555](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3555).
+ * dependencies - Bump `tycho-version` from 5.0.1 to 5.0.2. See [#3692](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3692).
+ * dependencies - Bump `org.codehaus.gmavenplus:gmavenplus-plugin` from 4.2.1 to 4.3.0. See [#3688](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3688).
+ * dependencies - Bump `org.apache.commons:commons-lang3` from 3.5 to 3.18.0 in test projects. See [#3685](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3685).
+ * dependencies - Bump `groovy-version` from 5.0.3 to 5.0.4. See [#3683](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3683).
+ * dependencies - Add JUnit Jupiter 5.14.1 to the target platform. See [#3668](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3668).
+ * debt - Restore some disabled tests. See [#3686](https://github.com/eclipse-jdtls/eclipse.jdt.ls/pull/3686).
+ * debt - Phase out `java.apply.workspaceEdit` in favour of `workspace/applyEdit`. See [#3543](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3543).
+
 # [1.55.0 (January 6th, 2025)](https://github.com/eclipse/eclipse.jdt.ls/milestone/147?closed=1)
  * enhancement - Add a quickfix to replace a deprecated field with one referenced in the docs. See [#3626](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/3626).
  * enhancement - Add a quickfix for "type safety warning" to infer type arguments. See [#626](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/626).
